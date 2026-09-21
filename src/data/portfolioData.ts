@@ -127,6 +127,8 @@ type Project = {
   featured?: boolean;
   demoId?: string;
   image?: string;
+  githubUrl?: string;
+  liveUrl?: string;
 };
 
 export const projects: Project[] = [
@@ -140,6 +142,8 @@ export const projects: Project[] = [
       "Solution globale de gestion intelligente du trafic urbain et régulation pour Smart Cities développée chez Innovat Electra Tech (SYTRAC ITS) : intégration de capteurs intelligents IoT, contrôle embarqué temps réel et supervision automatisée.",
     technologies: ["Linux Embarqué", "IoT", "C/C++", "Python", "Smart City", "Capteurs Intelligents"],
     featured: true,
+    githubUrl: "https://github.com/DjidelAbdelali/portfolio",
+    liveUrl: "https://djidelabdelali.github.io/portfolio/",
   },
   {
     title: "ASSEMBLY_1 — Simulateur du robot Delta",
@@ -151,6 +155,8 @@ export const projects: Project[] = [
     technologies: ["Three.js", "Cinématique inverse", "MATLAB/Simulink", "Commande en boucle fermée"],
     featured: true,
     demoId: "delta-simulator",
+    githubUrl: "https://github.com/DjidelAbdelali/delta-robot-simulator",
+    liveUrl: "https://djidelabdelali.github.io/delta-robot-simulator/",
   },
   {
     title: "Jumeau numérique — Système 3 cuves",
@@ -162,6 +168,8 @@ export const projects: Project[] = [
     technologies: ["React", "Simulation temps réel", "Supervision industrielle"],
     featured: true,
     demoId: "digital-twin-3cuves",
+    githubUrl: "https://github.com/DjidelAbdelali/industrial-3tank-digital-twin",
+    liveUrl: "https://djidelabdelali.github.io/industrial-3tank-digital-twin/",
   },
   {
     title: "Simulateur pédagogique d'automate (PLC)",
@@ -173,6 +181,8 @@ export const projects: Project[] = [
     technologies: ["React", "TypeScript", "IEC 61131-3", "Three.js", "Éditeur Ladder"],
     featured: true,
     demoId: "plc-sim",
+    githubUrl: "https://github.com/DjidelAbdelali/plc-ladder-st-simulator",
+    liveUrl: "https://djidelabdelali.github.io/plc-ladder-st-simulator/",
   },
   {
     title: "CRM local — Tickets, Caisse & Crédits",
@@ -184,6 +194,8 @@ export const projects: Project[] = [
     technologies: ["JavaScript", "IndexedDB", "Service Windows (NSSM)", "Export Excel"],
     featured: true,
     demoId: "crm-tickets",
+    githubUrl: "https://github.com/DjidelAbdelali/smart-crm-pos-system",
+    liveUrl: "https://djidelabdelali.github.io/smart-crm-pos-system/",
   },
   {
     title: "Convoyeur de tri électrostatique",
@@ -192,6 +204,8 @@ export const projects: Project[] = [
     tags: ["Automatisation industrielle"],
     description: "Étude et conception d'un convoyeur intelligent pour le tri automatisé de matériaux précieux.",
     technologies: ["Automatisation", "Conception mécanique", "Procédés industriels"],
+    githubUrl: "https://github.com/DjidelAbdelali/portfolio",
+    liveUrl: "https://djidelabdelali.github.io/portfolio/",
   },
   {
     title: "Tri automatisé par couleur",
@@ -203,6 +217,8 @@ export const projects: Project[] = [
     technologies: ["Capteurs", "Robotique", "Automatisation", "Arduino"],
     featured: true,
     demoId: "color-sort",
+    githubUrl: "https://github.com/DjidelAbdelali/automated-color-sorting-robot",
+    liveUrl: "https://djidelabdelali.github.io/automated-color-sorting-robot/",
   },
   {
     title: "Comparateur de navigation autonome par classification",
@@ -214,6 +230,8 @@ export const projects: Project[] = [
     technologies: ["KNN", "Classification", "Capteurs", "Systèmes intelligents"],
     featured: true,
     demoId: "robot-knn",
+    githubUrl: "https://github.com/DjidelAbdelali/autonomous-robot-knn-navigation",
+    liveUrl: "https://djidelabdelali.github.io/autonomous-robot-knn-navigation/",
   },
   {
     title: "Commande d'ascenseur avec automates Siemens",
@@ -224,6 +242,8 @@ export const projects: Project[] = [
     technologies: ["Siemens PLC", "Ladder", "LIST", "Grafcet"],
     featured: true,
     demoId: "elevator",
+    githubUrl: "https://github.com/DjidelAbdelali/siemens-plc-elevator-control",
+    liveUrl: "https://djidelabdelali.github.io/siemens-plc-elevator-control/",
   },
   {
     title: "Table d'équilibre autonome",
@@ -234,6 +254,8 @@ export const projects: Project[] = [
     technologies: ["Asservissement", "PID", "Capteurs", "Actionneurs"],
     featured: true,
     demoId: "balance-table",
+    githubUrl: "https://github.com/DjidelAbdelali/self-balancing-table-pid",
+    liveUrl: "https://djidelabdelali.github.io/self-balancing-table-pid/",
   },
   {
     title: "ROS2Academy — Plateforme d'apprentissage ROS2",
@@ -245,6 +267,8 @@ export const projects: Project[] = [
     technologies: ["React", "ROS2", "Jazzy", "Pédagogie"],
     featured: true,
     demoId: "ros2-academy",
+    githubUrl: "https://github.com/DjidelAbdelali/ros2-learning-academy",
+    liveUrl: "https://djidelabdelali.github.io/ros2-learning-academy/",
   },
   {
     title: "Bras manipulateur 3 axes",
@@ -256,6 +280,8 @@ export const projects: Project[] = [
     technologies: ["Arduino", "Servomoteurs", "Joystick", "Robotique", "Three.js"],
     featured: true,
     demoId: "robot-arm-3axis",
+    githubUrl: "https://github.com/DjidelAbdelali/3dof-robotic-arm-simulator",
+    liveUrl: "https://djidelabdelali.github.io/3dof-robotic-arm-simulator/",
   },
 ];
 

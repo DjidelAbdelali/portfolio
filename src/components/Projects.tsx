@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUpRight, BookOpen, Sparkles } from "lucide-react";
+import { ArrowUpRight, BookOpen, Sparkles, Github } from "lucide-react";
 import { useMemo, useState } from "react";
 import { projects as staticProjects } from "../data/portfolioData";
 import { useContent } from "../i18n/LanguageContext";
@@ -155,20 +155,32 @@ export function Projects() {
                     </div>
                   </div>
 
-                  {/* Single Action Button: View Project (Opens Explanatory Page) */}
-                  <div className="p-6 pt-0 border-t border-transparent">
+                  {/* Card Action Buttons: View Overview & GitHub Repo */}
+                  <div className="p-6 pt-0 border-t border-transparent flex gap-2">
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedProjectForReadme(project);
                       }}
-                      className="btn-primary w-full justify-center text-xs py-2.5 group/btn"
+                      className="btn-primary flex-1 justify-center text-xs py-2.5 group/btn"
                     >
                       <BookOpen size={15} />
-                      <span>{ui?.viewProject || "View Project Overview"}</span>
+                      <span>{ui?.viewProject || "Overview"}</span>
                       <ArrowUpRight size={15} className="transition-transform duration-200 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
                     </button>
+                    {project.githubUrl && (
+                      <a
+                        href={project.githubUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="btn-secondary px-3 py-2.5 text-xs inline-flex items-center justify-center"
+                        title="View GitHub Repository"
+                      >
+                        <Github size={15} />
+                      </a>
+                    )}
                   </div>
                 </motion.article>
               );

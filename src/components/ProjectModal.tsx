@@ -132,8 +132,20 @@ export function ProjectModal({ project, onClose, onOpenDemo }: ProjectModalProps
                   </button>
                 )}
 
+                {project.liveUrl && (
+                  <a
+                    href={project.liveUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-secondary py-2.5 px-4 text-xs"
+                  >
+                    <ExternalLink size={14} />
+                    <span>Full Live Demo</span>
+                  </a>
+                )}
+
                 <a
-                  href={readme?.githubUrl || "https://github.com/djidelabdelali"}
+                  href={project.githubUrl || readme?.githubUrl || "https://github.com/DjidelAbdelali"}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn-secondary py-2.5 px-4 text-xs"

@@ -1,0 +1,22 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Diagnostic / temporary files
+test-ar-shaping.pdf
+test-ar.pdf
+test_reshape_only.pdf
+temp_cv_html/
+
+# Dependency and build directories
+node_modules/
+dist/
+
+# Editor & OS files
+.vscode/
+.idea/
+.DS_Store
