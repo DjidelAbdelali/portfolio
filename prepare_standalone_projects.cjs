@@ -9,80 +9,80 @@ const demosDir = path.join(__dirname, 'src', 'assets', 'demos');
 const projects = [
   {
     demoId: 'delta-simulator',
-    repoName: 'delta-simulator',
-    title: 'ASSEMBLY_1 — Simulateur du Robot Delta 3D',
+    repoName: 'delta-robot-simulator',
+    title: 'Delta Robot Parallel Kinematics 3D Simulator',
     fileName: 'delta-simulator.html',
     description: 'Simulateur 3D interactif du robot parallèle Delta de mon PFE, reconstruit à partir des fichiers .slx Simulink : exploration cinématique manuelle, playback de trajectoires exportées, boucle fermée fidèle au correcteur réel et console de commandes intégrée.',
     tech: ['Three.js', 'Cinématique Inverse', 'MATLAB/Simulink', 'Commande en boucle fermée']
   },
   {
     demoId: 'digital-twin-3cuves',
-    repoName: 'digital-twin-3cuves',
-    title: 'Jumeau Numérique — Système 3 Cuves',
+    repoName: 'industrial-3tank-digital-twin',
+    title: 'Industrial 3-Tank Digital Twin & Supervision',
     fileName: 'digital-twin-3cuves.html',
     description: 'Application web de supervision d\'un procédé industriel à trois cuves : visualisation temps réel des niveaux et débits, et interface de pilotage pensée comme un jumeau numérique pédagogique.',
     tech: ['React', 'Simulation temps réel', 'Supervision industrielle', 'SVG Interactif']
   },
   {
     demoId: 'plc-sim',
-    repoName: 'plc-sim',
-    title: 'Simulateur Pédagogique d\'Automate Programmable (PLC)',
+    repoName: 'plc-ladder-st-simulator',
+    title: 'IEC 61131-3 PLC Ladder & ST Simulator',
     fileName: 'plcsim-standalone.html',
     description: 'Simulateur d\'automate programmable pensé comme outil pédagogique : éditeur Ladder, moteur Structured Text conforme IEC 61131-3, scènes de procédés animées en 3D et gestion des tags en temps réel.',
     tech: ['TypeScript', 'IEC 61131-3', 'Three.js', 'Éditeur Ladder', 'ST Engine']
   },
   {
     demoId: 'crm-tickets',
-    repoName: 'crm-tickets',
-    title: 'CRM Local — Tickets, Caisse & Crédits',
+    repoName: 'smart-crm-pos-system',
+    title: 'Local Business CRM, Tickets & Cash Register',
     fileName: 'crm-tickets.html',
     description: 'Système de gestion locale pour commerce (tickets, caisse, paye, crédits), stockage 100% navigateur (IndexedDB) et export Excel. Déployé en production avec un service Windows auto-résilient.',
     tech: ['JavaScript', 'IndexedDB', 'Service Windows (NSSM)', 'Export Excel']
   },
   {
     demoId: 'robot-knn',
-    repoName: 'robot-knn',
-    title: 'Comparateur de Navigation Autonome par Classification (KNN)',
+    repoName: 'autonomous-robot-knn-navigation',
+    title: 'Autonomous Robot Navigation & KNN Classifier Benchmark',
     fileName: 'robot-knn.html',
     description: 'Banc de comparaison d\'algorithmes de navigation autonome par classification de données capteurs (dont KNN) pour la prise de décision en temps réel, avec un mode permettant d\'implémenter et de tester son propre algorithme.',
     tech: ['KNN', 'Classification IA', 'Capteurs', 'Systèmes Intelligents']
   },
   {
     demoId: 'balance-table',
-    repoName: 'balance-table',
-    title: 'Table d\'Équilibre Autonome — Simulateur PID 3D',
+    repoName: 'self-balancing-table-pid',
+    title: 'Self-Balancing 3D Table PID Control',
     fileName: 'balance-table.html',
     description: 'Contrôle en boucle fermée pour la stabilisation d\'une plateforme mobile 3D avec régulation PID interactive et visualisation de l\'asservissement.',
     tech: ['Asservissement', 'PID', 'Three.js', 'Capteurs & Actionneurs']
   },
   {
     demoId: 'robot-arm-3axis',
-    repoName: 'robot-arm-3axis',
-    title: 'Bras Manipulateur 3 Axes (ARM-3DOF)',
+    repoName: '3dof-robotic-arm-simulator',
+    title: '3-DOF Robotic Arm Joint Controller',
     fileName: 'robot-arm-3axis.html',
     description: 'Simulateur 3D du bras robotisé 3 axes (ARM-3DOF) : contrôle articulaire interactif pensé comme complément au pilotage physique par joystick.',
     tech: ['Arduino', 'Servomoteurs', 'Robotique 3D', 'Three.js']
   },
   {
     demoId: 'elevator',
-    repoName: 'elevator',
-    title: 'Commande d\'Ascenseur avec Automates Siemens',
+    repoName: 'siemens-plc-elevator-control',
+    title: 'Siemens PLC Sequential Elevator Controller',
     fileName: 'elevator.html',
     description: 'Programmation et simulation d\'un système séquentiel de commande d\'ascenseur basé sur la logique des automates industriels Siemens (Ladder, Grafcet).',
     tech: ['Siemens PLC', 'Ladder', 'LIST', 'Grafcet']
   },
   {
     demoId: 'color-sort',
-    repoName: 'color-sort',
-    title: 'Tri Automatisé par Couleur — Convoyeur & Bras Robotisé',
+    repoName: 'automated-color-sorting-robot',
+    title: 'Automated Color Sorting Conveyor & Robot',
     fileName: 'color-sort.html',
     description: 'Développement d\'un système automatisé avec convoyeur et bras robotisé pour trier des objets par couleur à l\'aide de capteurs optiques et de contrôle embarqué.',
     tech: ['Capteurs', 'Robotique', 'Automatisation', 'Arduino']
   },
   {
     demoId: 'ros2-academy',
-    repoName: 'ros2-academy',
-    title: 'ROS2Academy — Plateforme d\'Apprentissage ROS2',
+    repoName: 'ros2-learning-academy',
+    title: 'ROS2 Learning Academy & Interactive Tutorials',
     fileName: 'ros2-academy.html',
     description: 'Plateforme web complète pour apprendre ROS2 en autonomie : roadmap progressive en 5 niveaux, plus de 60 modules avec exemples de code, challenges pratiques et suivi de progression.',
     tech: ['ROS2 Jazzy', 'Pédagogie Robotique', 'React', 'Interactive Tutorials']
@@ -93,7 +93,7 @@ if (!fs.existsSync(standaloneDir)) {
   fs.mkdirSync(standaloneDir, { recursive: true });
 }
 
-console.log('Preparing 10 standalone projects in:', standaloneDir);
+console.log('Preparing 10 standalone projects with proper names in:', standaloneDir);
 
 projects.forEach((proj) => {
   const projFolder = path.join(standaloneDir, proj.repoName);
@@ -154,32 +154,32 @@ projects.forEach((proj) => {
 [![Portfolio](https://img.shields.io/badge/Portfolio-DJIDEL%20Abdelali%20Rayan-blue?style=for-the-badge&logo=react)](https://djidelabdelali.github.io/portfolio/)
 [![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-black?style=for-the-badge&logo=github)](https://github.com/DjidelAbdelali/${proj.repoName})
 
-## 📌 Présentation
+## 📌 Description & Overview
 
 ${proj.description}
 
-Ce projet fait partie du portfolio technique de **DJIDEL Abdelali Rayan** (Ingénieur en Automatique et Systèmes).
+This project is an interactive engineering module built by **DJIDEL Abdelali Rayan** (Systems & Automation Engineer).
 
 ---
 
-## 🚀 Démo en direct
+## 🚀 Live Interactive Demo
 
-Une démo web interactive est disponible sans aucune installation requise :
-🔗 **[Accéder à la démo interactive](https://djidelabdelali.github.io/${proj.repoName}/)**
+No installation required! You can test and interact with the full web simulation live in your browser:
+🔗 **[Launch Interactive Web Demo](https://djidelabdelali.github.io/${proj.repoName}/)**
 
 ---
 
-## 🛠️ Technologies & Outils
+## 🛠️ Key Technologies & Stack
 
 ${proj.tech.map(t => `- **${t}**`).join('\n')}
 
 ---
 
-## 🔗 Liens Utiles
+## 🔗 Connected Ecosystem Links
 
-- 🌐 **Portfolio principal** : [djidelabdelali.github.io/portfolio](https://djidelabdelali.github.io/portfolio/)
-- 💻 **Profil GitHub** : [github.com/DjidelAbdelali](https://github.com/DjidelAbdelali)
-- 💼 **LinkedIn** : [DJIDEL Abdelali Rayan](https://linkedin.com/in/djidel-abdelali-rayan-814b25207)
+- 🌐 **Main Portfolio**: [djidelabdelali.github.io/portfolio](https://djidelabdelali.github.io/portfolio/)
+- 💻 **GitHub Profile**: [github.com/DjidelAbdelali](https://github.com/DjidelAbdelali)
+- 💼 **LinkedIn Profile**: [DJIDEL Abdelali Rayan](https://linkedin.com/in/djidel-abdelali-rayan-814b25207)
 `;
 
   fs.writeFileSync(path.join(projFolder, 'README.md'), readmeContent, 'utf8');
@@ -208,7 +208,7 @@ dist/
       execSync(`git remote set-url origin ${remoteUrl}`, { cwd: projFolder, stdio: 'ignore' });
     }
 
-    console.log(`✓ Git repo initialized for ${proj.repoName} -> ${remoteUrl}`);
+    console.log(`✓ Git repo initialized: ${proj.repoName} -> ${remoteUrl}`);
   } catch (err) {
     console.error(`Error initializing git in ${proj.repoName}:`, err.message);
   }
@@ -229,9 +229,9 @@ try {
   } catch (e) {
     execSync(`git remote set-url origin ${mainRemoteUrl}`, { cwd: mainPortfolioFolder, stdio: 'ignore' });
   }
-  console.log(`✓ Git repo initialized for main portfolio -> ${mainRemoteUrl}`);
+  console.log(`✓ Git repo initialized: main portfolio -> ${mainRemoteUrl}`);
 } catch (err) {
   console.error('Error initializing git in main portfolio:', err.message);
 }
 
-console.log('All 10 standalone project folders & git repositories successfully prepared!');
+console.log('All 10 standalone project folders & git repositories successfully prepared with proper names!');
