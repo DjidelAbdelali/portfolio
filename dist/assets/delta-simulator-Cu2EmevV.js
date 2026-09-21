@@ -1,0 +1,2388 @@
+const n=`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ASSEMBLY_1 — Delta Robot Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>
+<style>
+:root{
+  --bg-0:#ffffff; --bg-1:#f6f7f9; --bg-2:#eef0f4; --bg-3:#e3e6ec;
+  --line:#d7dbe3; --line-soft:#e7e9ee;
+  --text-0:#161a21; --text-1:#535c6c; --text-2:#8a93a3;
+  --amber:#d9720f; --amber-dim:#fbe6cf;
+  --cyan:#0f948a; --cyan-dim:#dcf1ee;
+  --red:#d43d3d; --green:#1f9d63;
+  --arm1:#d9720f; --arm2:#0f948a; --arm3:#7b52c9;
+  --font-display:'Space Grotesk', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;background:var(--bg-0);color:var(--text-0);font-family:var(--font-display);overflow:hidden;}
+*::-webkit-scrollbar{width:8px;height:8px;}
+*::-webkit-scrollbar-track{background:transparent;}
+*::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+
+#app{position:fixed;inset:0;display:flex;flex-direction:column;}
+#topbar{
+  height:54px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;background:var(--bg-1);border-bottom:1px solid var(--line);z-index:10;
+}
+.brand{display:flex;align-items:center;gap:9px;}
+.brand-mark{color:var(--amber);font-size:19px;line-height:1;}
+.brand-text{display:flex;flex-direction:column;line-height:1.1;}
+.brand-title{font-weight:700;font-size:13.5px;letter-spacing:.06em;}
+.brand-sub{font-family:var(--font-mono);font-size:9px;letter-spacing:.09em;color:var(--text-2);margin-top:2px;}
+.topbar-actions{display:flex;gap:7px;flex-wrap:wrap;}
+.ghost-btn{
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.06em;
+  background:transparent;border:1px solid var(--line);color:var(--text-1);
+  padding:6px 11px;border-radius:3px;cursor:pointer;transition:.15s ease;
+}
+.ghost-btn:hover{border-color:var(--amber);color:var(--amber);}
+.ghost-btn.active{background:var(--amber-dim);border-color:var(--amber);color:var(--amber);}
+
+.brand-crumb{font-weight:400;color:var(--text-2);font-size:11.5px;letter-spacing:0;margin-left:2px;}
+
+#body{flex:1;display:flex;min-height:0;}
+#viewport{position:relative;flex:1;min-width:0;background:radial-gradient(ellipse at 50% 15%, #ffffff 0%, #eceef2 72%);}
+#scene{display:block;width:100%;height:100%;}
+#viewport-caption{
+  position:absolute;top:12px;left:50%;transform:translateX(-50%);
+  text-align:center;pointer-events:none;
+}
+.vc-main{display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;color:var(--text-1);text-transform:uppercase;}
+.vc-sub{display:block;font-family:var(--font-mono);font-size:9px;color:var(--text-2);margin-top:2px;}
+#viewport-hint{
+  position:absolute;bottom:12px;left:50%;transform:translateX(-50%);
+  font-family:var(--font-mono);font-size:9.5px;color:var(--text-2);
+  background:rgba(255,255,255,.75);padding:5px 12px;border-radius:20px;border:1px solid var(--line-soft);
+  pointer-events:none;
+}
+#axis-compass{
+  position:absolute;bottom:14px;right:16px;display:flex;gap:10px;
+  font-family:var(--font-mono);font-size:10px;color:var(--text-2);pointer-events:none;
+}
+.ac-item{display:flex;align-items:center;gap:3px;}
+.ac-x{color:var(--arm1);} .ac-y{color:var(--arm2);} .ac-z{color:var(--arm3);}
+.ac-item em{font-style:normal;color:var(--text-2);font-size:9px;}
+#readout{
+  position:absolute;top:12px;left:12px;background:rgba(255,255,255,.88);backdrop-filter:blur(6px);
+  border:1px solid var(--line);border-radius:5px;padding:12px 15px;min-width:150px;
+  box-shadow:0 2px 14px rgba(20,25,35,.06);
+}
+.readout-title{font-family:var(--font-mono);font-size:9px;letter-spacing:.1em;color:var(--text-2);margin-bottom:8px;}
+.readout-row{display:flex;justify-content:space-between;gap:20px;font-family:var(--font-mono);font-size:12px;margin-bottom:3px;}
+.readout-row .k{color:var(--text-2);}
+.readout-row .v{color:var(--cyan);font-weight:600;}
+.readout-row.unreachable .v{color:var(--red);}
+.readout-sub{margin-top:8px;padding-top:8px;border-top:1px solid var(--line-soft);font-family:var(--font-mono);font-size:10px;color:var(--text-2);}
+
+#panel{width:340px;flex:0 0 auto;background:var(--bg-1);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;}
+.panel-scroll{padding:16px 16px 60px;flex:1;overflow-y:auto;min-height:0;}
+
+.panel-tabs{display:flex;flex:0 0 auto;border-bottom:1px solid var(--line);background:var(--bg-1);}
+.panel-tab{
+  flex:1;text-align:center;padding:11px 4px;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.04em;
+  color:var(--text-2);cursor:pointer;border-bottom:2px solid transparent;transition:.15s ease;white-space:nowrap;
+}
+.panel-tab:hover{color:var(--text-1);}
+.panel-tab.active{color:var(--amber);border-bottom-color:var(--amber);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+.tab-intro{font-size:10.5px;line-height:1.5;color:var(--text-2);margin:0 0 18px;padding-bottom:14px;border-bottom:1px solid var(--line-soft);}
+
+.subcollapse{border:1px solid var(--line);border-radius:6px;padding:10px 12px;margin-top:14px;}
+.subcollapse-head{display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.subcollapse-head .sc-title{font-size:11px;font-weight:600;color:var(--text-0);}
+.subcollapse-head .sc-chev{color:var(--amber);transition:transform .2s ease;font-size:11px;}
+.subcollapse:not(.collapsed) .sc-chev{transform:rotate(90deg);}
+.subcollapse.collapsed .sc-body{display:none;}
+.subcollapse .sc-body{margin-top:12px;}
+.subcollapse .sc-sub{font-size:10px;color:var(--text-2);margin-top:3px;}
+.panel-section{margin-bottom:22px;}
+.section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:9px;}
+.section-title{font-size:12.5px;font-weight:600;letter-spacing:.03em;}
+.section-tag{font-family:var(--font-mono);font-size:8.5px;color:var(--text-2);letter-spacing:.05em;}
+.section-note{font-size:10.5px;line-height:1.5;color:var(--text-2);margin:0 0 10px;}
+
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 10px;}
+.field-grid-1col{grid-template-columns:1fr;}
+.field-grid-1col .field{flex-direction:row;align-items:center;justify-content:space-between;gap:10px;}
+.field-grid-1col .field label{flex:1;}
+.field-grid-1col .field input[type=number]{width:80px;flex:0 0 auto;}
+.field{display:flex;flex-direction:column;gap:4px;}
+.field label{font-family:var(--font-mono);font-size:9px;color:var(--text-1);letter-spacing:.03em;line-height:1.4;}
+.field label em{font-style:normal;color:var(--amber);}
+.field label small{display:block;font-size:8.5px;color:var(--text-2);letter-spacing:.02em;}
+.field input[type=number]{
+  background:var(--bg-2);border:1px solid var(--line);color:var(--text-0);border-radius:3px;
+  padding:6px 7px;font-family:var(--font-mono);font-size:11px;width:100%;
+}
+.field input[type=number]:focus{outline:none;border-color:var(--amber);}
+
+.workspace-toggle{
+  display:flex;align-items:center;gap:8px;padding:9px 0;cursor:pointer;
+  font-size:11px;color:var(--text-1);letter-spacing:.02em;transition:.15s ease;
+}
+.workspace-toggle:hover{color:var(--text-0);}
+.workspace-toggle .ws-dot{font-size:13px;color:var(--text-2);transition:.15s ease;}
+.workspace-toggle.on{color:var(--cyan);}
+.workspace-toggle.on .ws-dot{color:var(--cyan);}
+.workspace-toggle .ws-count{margin-left:auto;font-family:var(--font-mono);font-size:9px;color:var(--text-2);}
+
+.jog-grid{display:flex;flex-direction:column;gap:8px;}
+.jog-axis{display:flex;align-items:center;gap:8px;}
+.jog-label{font-family:var(--font-mono);font-size:11px;width:16px;font-weight:600;}
+.jog-btn{
+  flex:1;font-family:var(--font-mono);font-size:15px;
+  background:var(--bg-2);border:1px solid var(--line);color:var(--text-1);
+  padding:7px 0;border-radius:3px;cursor:pointer;transition:.12s ease;
+}
+.jog-btn:hover{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-dim);}
+.jog-btn:active{transform:scale(.94);}
+
+.color-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px 12px;}
+.color-field{display:flex;align-items:center;gap:8px;}
+.color-field input[type=color]{
+  width:30px;height:30px;padding:0;border:1px solid var(--line);border-radius:5px;
+  cursor:pointer;background:none;flex:0 0 auto;
+}
+.color-field input[type=color]::-webkit-color-swatch-wrapper{padding:2px;}
+.color-field input[type=color]::-webkit-color-swatch{border:none;border-radius:3px;}
+.color-field label{font-family:var(--font-mono);font-size:10px;color:var(--text-1);}
+
+#console-log{
+  height:120px;overflow-y:auto;background:var(--bg-2);border:1px solid var(--line);border-radius:4px;
+  padding:8px 10px;font-family:var(--font-mono);font-size:10px;line-height:1.6;margin-bottom:8px;
+}
+#console-log .cl-in{color:var(--text-0);font-weight:500;}
+#console-log .cl-in::before{content:'❯ ';color:var(--amber);}
+#console-log .cl-out{color:var(--text-1);}
+#console-log .cl-err{color:var(--red);font-weight:500;}
+.console-input{
+  width:100%;background:var(--bg-2);border:1px solid var(--line);color:var(--text-0);
+  border-radius:4px;padding:8px 10px;font-family:var(--font-mono);font-size:11px;
+}
+.console-input:focus{outline:none;border-color:var(--amber);}
+
+#cl-chart-wrap{background:var(--bg-2);border:1px solid var(--line);border-radius:5px;padding:10px 8px 4px;}
+#cl-chart-wrap svg{display:block;width:100%;height:auto;}
+.cl-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;padding:0 2px;}
+.cl-legend-item{display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:9px;color:var(--text-1);}
+.cl-legend-dot{width:9px;height:9px;border-radius:2px;flex:0 0 auto;}
+
+table.cl-table{width:100%;border-collapse:collapse;margin-top:10px;font-family:var(--font-mono);font-size:10px;}
+table.cl-table th{text-align:left;color:var(--text-2);font-weight:500;padding:5px 6px;border-bottom:1px solid var(--line);font-size:9px;letter-spacing:.04em;}
+table.cl-table td{padding:6px 6px;border-bottom:1px solid var(--line-soft);color:var(--text-1);}
+table.cl-table tr{cursor:pointer;transition:background .12s ease;}
+table.cl-table tr:hover td{background:var(--bg-3);}
+table.cl-table tr.best td{color:var(--green);}
+table.cl-table td.ctrl-name{color:var(--text-0);font-weight:500;}
+table.cl-table .rank-dot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:middle;}
+
+table.cl-grid{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:9.5px;}
+table.cl-grid th{padding:5px 6px;color:var(--text-2);font-weight:500;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap;}
+table.cl-grid th.row-label{text-align:left;}
+table.cl-grid td{padding:6px 8px;text-align:center;cursor:pointer;border-bottom:1px solid var(--line-soft);color:#14181f;font-weight:500;}
+table.cl-grid td.row-label{text-align:left;color:var(--text-0);font-weight:500;cursor:default;background:none !important;}
+table.cl-grid td.diverged{color:var(--red);font-weight:600;}
+table.cl-grid td:hover:not(.row-label){outline:2px solid var(--amber);outline-offset:-2px;}
+
+.joint-row{margin-bottom:12px;}
+.joint-row-head{display:flex;justify-content:space-between;margin-bottom:5px;}
+.joint-name{font-family:var(--font-mono);font-size:10.5px;color:var(--text-0);}
+.joint-val{font-family:var(--font-mono);font-size:11px;color:var(--cyan);}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:3px;background:var(--line);border-radius:2px;outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--cyan);border:2px solid #0d1a19;cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--cyan);border:2px solid #0d1a19;cursor:pointer;}
+
+.btn-row{display:flex;gap:8px;margin-top:4px;}
+.btn{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.05em;flex:1;
+  background:var(--bg-2);border:1px solid var(--line);color:var(--text-1);
+  padding:9px 10px;border-radius:3px;cursor:pointer;transition:.15s ease;text-align:center;
+}
+.btn:hover{border-color:var(--text-1);color:var(--text-0);}
+.btn.primary{background:var(--amber-dim);border-color:var(--amber);color:var(--amber);}
+.btn.primary:hover{background:var(--amber);color:#1a1206;}
+
+.chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.chip{
+  font-family:var(--font-mono);font-size:10px;padding:6px 10px;border-radius:20px;
+  background:var(--bg-2);border:1px solid var(--line);color:var(--text-1);cursor:pointer;transition:.15s ease;
+}
+.chip:hover{border-color:var(--cyan);color:var(--cyan);}
+.chip.active{background:var(--cyan-dim);border-color:var(--cyan);color:var(--cyan);}
+
+.speed-row{display:flex;align-items:center;gap:10px;margin-top:8px;}
+.speed-row label{font-family:var(--font-mono);font-size:9px;color:var(--text-2);white-space:nowrap;}
+.speed-row input[type=range]{flex:1;}
+.speed-val{font-family:var(--font-mono);font-size:10px;color:var(--cyan);width:28px;text-align:right;}
+
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-top:1px solid var(--line-soft);}
+.toggle-row .label{font-size:11px;color:var(--text-1);}
+.switch{position:relative;width:34px;height:18px;background:var(--bg-3);border:1px solid var(--line);border-radius:20px;cursor:pointer;flex:0 0 auto;}
+.switch.on{background:var(--cyan-dim);border-color:var(--cyan);}
+.switch::after{content:'';position:absolute;top:1px;left:1px;width:14px;height:14px;border-radius:50%;background:var(--text-2);transition:.15s ease;}
+.switch.on::after{left:17px;background:var(--cyan);}
+
+.legend{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;}
+.legend-item{display:flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:9.5px;color:var(--text-2);}
+.legend-dot{width:8px;height:8px;border-radius:50%;}
+
+@media (max-width: 880px){
+  #body{flex-direction:column;}
+  #panel{width:100%;max-height:46vh;border-left:none;border-top:1px solid var(--line);}
+  .brand-sub{display:none;}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header id="topbar">
+    <div class="brand">
+      <span class="brand-mark">◈</span>
+      <div class="brand-text">
+        <span class="brand-title">ASSEMBLY_1 <span class="brand-crumb">— Delta Robot Simulator</span></span>
+        <span class="brand-sub">3‑RSS PARALLEL DELTA · FK &amp; IK</span>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="ghost-btn" id="btn-home">HOME</button>
+      <button class="ghost-btn" id="btn-wire">WIRE</button>
+      <button class="ghost-btn" id="btn-view">RESET VIEW</button>
+    </div>
+  </header>
+
+  <div id="body">
+    <div id="viewport">
+      <canvas id="scene"></canvas>
+
+      <div id="viewport-caption">
+        <span class="vc-main">viewport · 3d</span>
+        <span class="vc-sub">perspective</span>
+      </div>
+
+      <div id="readout">
+        <div class="readout-title">END‑EFFECTOR · mm</div>
+        <div class="readout-row"><span class="k">X</span><span class="v" id="ro-x">0.0</span></div>
+        <div class="readout-row"><span class="k">Y</span><span class="v" id="ro-y">0.0</span></div>
+        <div class="readout-row"><span class="k">Z</span><span class="v" id="ro-z">0.0</span></div>
+        <div class="readout-sub" id="ro-status">reach · radial 0mm · z 0mm</div>
+      </div>
+
+      <div id="axis-compass">
+        <span class="ac-item ac-x">X</span>
+        <span class="ac-item ac-y">Y</span>
+        <span class="ac-item ac-z">Z <em>(up)</em></span>
+      </div>
+
+      <div id="viewport-hint">LMB orbit · RMB pan · wheel zoom</div>
+    </div>
+
+    <aside id="panel">
+      <div class="panel-tabs" id="panel-tabs">
+        <div class="panel-tab active" data-tab="explore">◈ EXPLORE</div>
+        <div class="panel-tab" data-tab="simulink">⇪ SIMULINK</div>
+        <div class="panel-tab" data-tab="lab">⚗ CONTROL LAB</div>
+        <div class="panel-tab" data-tab="console">❯ CONSOLE</div>
+      </div>
+      <div class="panel-scroll">
+
+        <div class="tab-panel active" data-tab="explore">
+        <p class="tab-intro">Play with the robot directly — edit its geometry, drive it by hand, or watch it trace a shape. No physics involved, just pure kinematics.</p>
+
+        <section class="panel-section">
+          <div class="section-head"><span class="section-title">Robot Geometry</span><span class="section-tag">mm</span></div>
+          <div class="field-grid field-grid-1col">
+            <div class="field"><label>Base radius <em>R</em><small>fixed platform</small></label><input type="number" id="p-Rf" value="80.5" step="1"/></div>
+            <div class="field"><label>Upper arm <em>L</em><small>bicep · driven</small></label><input type="number" id="p-L" value="80.1" step="1"/></div>
+            <div class="field"><label>Lower arm <em>ℓ</em><small>forearm · passive</small></label><input type="number" id="p-l" value="160.0" step="1"/></div>
+            <div class="field"><label>End‑effector radius <em>r</em><small>moving platform</small></label><input type="number" id="p-Re" value="35.1" step="1"/></div>
+          </div>
+          <p class="section-note" style="margin-top:10px;">Measured directly from <span style="color:var(--text-1)">assembly_1.urdf</span>'s ball‑joint and motor‑pivot coordinates — tweak to explore other builds.</p>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-head"><span class="section-title">Motor Angles · Forward Kinematics</span></div>
+          <div id="motor-sliders"></div>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-head"><span class="section-title">Inverse Kinematics</span><span class="section-tag">TARGET (mm)</span></div>
+          <div class="field-grid">
+            <div class="field"><label>X</label><input type="number" id="ik-x" value="0" step="5"/></div>
+            <div class="field"><label>Y</label><input type="number" id="ik-y" value="0" step="5"/></div>
+            <div class="field"><label>Z</label><input type="number" id="ik-z" value="-200" step="5"/></div>
+          </div>
+          <div class="btn-row">
+            <button class="btn" id="btn-reset-ik">Reset</button>
+            <button class="btn primary" id="btn-solve-ik">Solve IK</button>
+          </div>
+          <p class="section-note" style="margin-top:8px;">enter a target (X, Y, Z in mm) and click "solve ik" — the arms move to the pose.</p>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-head"><span class="section-title">Trajectories</span><span class="section-tag">PATH</span></div>
+          <div class="chip-row" id="traj-chips">
+            <span class="chip" data-traj="ellipse_pfe_kin">Ellipse (PFE)</span>
+            <span class="chip" data-traj="circle">Circle</span>
+            <span class="chip" data-traj="figure8">Figure‑8</span>
+            <span class="chip" data-traj="spiral">Spiral</span>
+            <span class="chip" data-traj="helix">Helix</span>
+            <span class="chip" data-traj="square">Square</span>
+            <span class="chip" data-traj="rose">Rose</span>
+          </div>
+          <p class="section-note" style="margin-top:6px;">"Ellipse (PFE)" is pure kinematics — no dynamics, no controller, perfect tracking by construction. It switches the robot to your PFE's own geometry. Use the Control Lab below to see the same path tracked under real dynamics with a controller (and its error).</p>
+          <div class="btn-row">
+            <button class="btn primary" id="btn-play">▶ Play</button>
+            <button class="btn" id="btn-stop">Stop</button>
+          </div>
+          <div class="speed-row">
+            <label>SPEED</label>
+            <input type="range" id="traj-speed" min="0.2" max="3" step="0.1" value="1"/>
+            <span class="speed-val" id="traj-speed-val">1×</span>
+          </div>
+          <p class="section-note" style="margin-top:8px;">select a path — the platform traces it automatically.</p>
+        </section>
+
+        <section class="panel-section">
+          <div class="workspace-toggle" id="toggle-workspace"><span class="ws-dot">◯</span> Show Workspace <span class="ws-count" id="ws-count"></span></div>
+          <div class="toggle-row">
+            <span class="label">Show joint axes</span>
+            <div class="switch" id="toggle-axes"></div>
+          </div>
+          <div class="legend">
+            <div class="legend-item"><span class="legend-dot" style="background:var(--arm1)"></span>Arm 1</div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--arm2)"></span>Arm 2</div>
+            <div class="legend-item"><span class="legend-dot" style="background:var(--arm3)"></span>Arm 3</div>
+          </div>
+        </section>
+
+        <div class="subcollapse collapsed">
+          <div class="subcollapse-head"><span class="sc-title">Manual Jog <span class="sc-sub">per‑arm direct control</span></span><span class="sc-chev">▸</span></div>
+          <div class="sc-body">
+          <div class="jog-grid">
+            <div class="jog-axis">
+              <span class="jog-label" style="color:var(--arm1)">L₁</span>
+              <button class="jog-btn" data-arm="0" data-dir="-1">−</button>
+              <button class="jog-btn" data-arm="0" data-dir="1">+</button>
+            </div>
+            <div class="jog-axis">
+              <span class="jog-label" style="color:var(--arm2)">L₂</span>
+              <button class="jog-btn" data-arm="1" data-dir="-1">−</button>
+              <button class="jog-btn" data-arm="1" data-dir="1">+</button>
+            </div>
+            <div class="jog-axis">
+              <span class="jog-label" style="color:var(--arm3)">L₃</span>
+              <button class="jog-btn" data-arm="2" data-dir="-1">−</button>
+              <button class="jog-btn" data-arm="2" data-dir="1">+</button>
+            </div>
+          </div>
+          <div class="chip-row" id="jog-step-chips" style="margin-top:10px;">
+            <span class="chip" data-step="0.5">0.5°</span>
+            <span class="chip active" data-step="2">2°</span>
+            <span class="chip" data-step="5">5°</span>
+            <span class="chip" data-step="10">10°</span>
+          </div>
+          <p class="section-note" style="margin-top:8px;">jogs each upper arm's driven bicep angle (θ₁ θ₂ θ₃) directly via FK — click the viewport, then <span style="color:var(--text-1)">Q/A</span> · <span style="color:var(--text-1)">W/S</span> · <span style="color:var(--text-1)">E/D</span> for arms 1·2·3.</p>
+          </div>
+        </div>
+
+        <div class="subcollapse collapsed">
+          <div class="subcollapse-head"><span class="sc-title">Appearance <span class="sc-sub">custom colors</span></span><span class="sc-chev">▸</span></div>
+          <div class="sc-body">
+          <div class="color-grid">
+            <div class="color-field"><input type="color" id="color-bg" value="#f4f5f7"/><label>Background</label></div>
+            <div class="color-field"><input type="color" id="color-accent" value="#d9720f"/><label>UI accent</label></div>
+            <div class="color-field"><input type="color" id="color-arm1" value="#d9720f"/><label>Arm 1</label></div>
+            <div class="color-field"><input type="color" id="color-arm2" value="#0f948a"/><label>Arm 2</label></div>
+            <div class="color-field"><input type="color" id="color-arm3" value="#7b52c9"/><label>Arm 3</label></div>
+            <div class="color-field"><input type="color" id="color-base" value="#b4bac4"/><label>Base plate</label></div>
+          </div>
+          <button class="btn" id="btn-color-reset" style="margin-top:10px;width:100%;">Reset colors</button>
+          </div>
+        </div>
+
+        </div><!-- /tab-panel: explore -->
+
+        <div class="tab-panel" data-tab="simulink">
+        <p class="tab-intro">Play back a CSV exported from Simulink (Time + 3 signals — motor angles or an end‑effector XYZ path) directly on the 3D robot.</p>
+
+        <section class="panel-section">
+          <div class="section-head"><span class="section-title">Simulink Import</span><span class="section-tag">CSV PLAYBACK</span></div>
+          <input type="file" id="simulink-file" accept=".csv,.txt" style="display:none"/>
+          <button class="btn" id="btn-simulink-upload" style="width:100%;">Upload CSV…</button>
+          <p class="section-note" id="simulink-info" style="margin-top:8px;">no file loaded — export <em style="color:var(--text-1);font-style:normal;">Time + 3 signals</em> from Simulink (To Workspace → writematrix, or Simulation Data Inspector → Export → CSV).</p>
+
+          <div id="simulink-controls" style="display:none;margin-top:6px;">
+            <div class="chip-row" id="simulink-mode-chips">
+              <span class="chip active" data-mode="angles">Angles θ₁θ₂θ₃</span>
+              <span class="chip" data-mode="xyz">Position XYZ</span>
+            </div>
+            <div class="btn-row" style="margin-top:9px;">
+              <button class="btn primary" id="btn-simulink-play">▶ Play</button>
+              <button class="btn" id="btn-simulink-stop">Stop</button>
+            </div>
+            <div class="speed-row">
+              <label>SPEED</label>
+              <input type="range" id="simulink-speed" min="0.1" max="4" step="0.1" value="1"/>
+              <span class="speed-val" id="simulink-speed-val">1.0×</span>
+            </div>
+            <input type="range" id="simulink-scrub" min="0" max="1" step="0.001" value="0" style="width:100%;margin-top:10px;"/>
+            <div class="readout-row" style="margin-top:2px;"><span class="k">t</span><span class="v" id="simulink-time">0.00 / 0.00 s</span></div>
+            <div class="toggle-row">
+              <span class="label">Loop</span>
+              <div class="switch" id="toggle-simulink-loop"></div>
+            </div>
+          </div>
+        </section>
+
+        </div><!-- /tab-panel: simulink -->
+
+        <div class="tab-panel" data-tab="lab">
+        <p class="tab-intro">The real closed‑loop simulation reconstructed from your PFE's <span style="color:var(--text-1)">.slx</span> files — exact plant dynamics, trajectory, and controller.</p>
+
+        <section class="panel-section">
+          <div class="section-head"><span class="section-title">PFE Control Lab</span><span class="section-tag">CLOSED‑LOOP SIM</span></div>
+          <p class="section-note">Real closed‑loop simulation reconstructed from your uploaded <span style="color:var(--text-1)">.slx</span> files: exact plant dynamics (MDD), the reference trajectory, and each controller's block diagram — run entirely in‑browser, no MATLAB needed.</p>
+
+          <div class="chip-row" id="cl-controller-chips">
+            <span class="chip active" data-ctrl="pd">PD classique</span>
+            <span class="chip" data-ctrl="pdf">PD fractionnaire</span>
+            <span class="chip" data-ctrl="s1sat">TDC+S1 (sat)</span>
+            <span class="chip" data-ctrl="s1dhrl">TDC+S1 (DHRL)</span>
+            <span class="chip" data-ctrl="s2">TDC+S2</span>
+          </div>
+
+          <div class="field-grid" id="cl-params"></div>
+
+          <div class="section-head" style="margin-top:12px;"><span class="section-title" style="font-size:11px;">Trajectory</span></div>
+          <div class="chip-row" id="cl-traj-chips">
+            <span class="chip active" data-traj="ellipse_pfe">Ellipse (PFE)</span>
+            <span class="chip" data-traj="circle">Circle</span>
+            <span class="chip" data-traj="figure8">Figure‑8</span>
+            <span class="chip" data-traj="spiral">Spiral</span>
+            <span class="chip" data-traj="helix">Helix</span>
+            <span class="chip" data-traj="square">Square</span>
+            <span class="chip" data-traj="rose">Rose</span>
+          </div>
+          <div class="field-grid" id="cl-traj-params">
+            <div class="field"><label>A (m)</label><input type="number" id="cl-A" value="0.25" step="0.01"/></div>
+            <div class="field"><label>B (m)</label><input type="number" id="cl-B" value="0.06" step="0.01"/></div>
+            <div class="field"><label>p (period scale)</label><input type="number" id="cl-p" value="1" step="0.1"/></div>
+          </div>
+
+          <div class="section-head" style="margin-top:12px;"><span class="section-title" style="font-size:11px;">Payload &amp; Integration</span></div>
+          <div class="field-grid">
+            <div class="field"><label>Payload at end‑effector (kg)</label><input type="number" id="cl-payload" value="0" step="0.01" min="0"/></div>
+            <div class="field"><label>tf (s)</label><input type="number" id="cl-tf" value="0.5" step="0.1"/></div>
+            <div class="field"><label>h (s, step)</label><input type="number" id="cl-h" value="0.001" step="0.0005"/></div>
+          </div>
+          <p class="section-note" style="margin-top:6px;">Payload adds directly to the platform mass term in the dynamics (MDD) — a stiff, high‑gain controller keeps tracking error flat as payload grows; a fragile one degrades or diverges.</p>
+
+          <button class="btn primary" id="btn-cl-run" style="width:100%;margin-top:10px;">▶ Run Simulation</button>
+          <p class="section-note" id="cl-status" style="margin-top:8px;">not run yet</p>
+          <div class="btn-row" id="cl-playback-quick" style="display:none;">
+            <button class="btn" id="btn-cl-pause">⏸ Pause</button>
+            <button class="btn" id="btn-cl-restart">↺ Restart</button>
+          </div>
+          <div id="cl-angle-chart-wrap" style="display:none;margin-top:8px;"></div>
+
+          <div class="subcollapse collapsed">
+            <div class="subcollapse-head"><span class="sc-title">Advanced Analysis <span class="sc-sub">compare controllers, trajectories &amp; payload</span></span><span class="sc-chev">▸</span></div>
+            <div class="sc-body">
+
+          <button class="btn" id="btn-cl-compare" style="width:100%;">⇄ Compare All 5 Controllers</button>
+          <button class="btn" id="btn-cl-compare-traj" style="width:100%;margin-top:6px;">⇄ Compare All 7 Trajectories (this controller)</button>
+          <button class="btn" id="btn-cl-grid" style="width:100%;margin-top:6px;">⊞ Full Grid — 5 Controllers × 7 Trajectories</button>
+          <div id="cl-compare-results" style="display:none;margin-top:12px;">
+            <div id="cl-chart-wrap"></div>
+            <table class="cl-table" id="cl-table"></table>
+            <p class="section-note" style="margin-top:8px;">Click a row to load that run into the player above.</p>
+          </div>
+          <div id="cl-grid-results" style="display:none;margin-top:12px;overflow-x:auto;">
+            <table class="cl-table cl-grid" id="cl-grid-table"></table>
+            <p class="section-note" style="margin-top:8px;">RMS tracking error (°), green = best per row. Click a cell to load that run.</p>
+          </div>
+
+          <div class="section-head" style="margin-top:14px;"><span class="section-title" style="font-size:11px;">Payload Robustness Test</span></div>
+          <p class="section-note">Runs all 5 controllers on the currently selected trajectory across a range of payload masses, so you can see which one stays accurate — and which one falls apart — as the end‑effector gets heavier.</p>
+          <div class="field-grid">
+            <div class="field"><label>Max payload (kg)</label><input type="number" id="cl-sweep-max" value="0.3" step="0.05" min="0"/></div>
+            <div class="field"><label>Steps</label><input type="number" id="cl-sweep-steps" value="6" step="1" min="2" max="15"/></div>
+          </div>
+          <button class="btn primary" id="btn-cl-sweep" style="width:100%;margin-top:8px;">⚖ Test Payload Robustness (All 5)</button>
+          <div id="cl-sweep-results" style="display:none;margin-top:12px;">
+            <div id="cl-sweep-chart-wrap"></div>
+            <table class="cl-table" id="cl-sweep-table"></table>
+            <p class="section-note" style="margin-top:8px;">Max stable payload = heaviest tested mass before that controller diverged. Click a row to load its heaviest stable run.</p>
+          </div>
+
+            </div>
+          </div>
+        </section>
+
+        </div><!-- /tab-panel: lab -->
+
+        <div class="tab-panel" data-tab="console">
+        <p class="tab-intro">A tiny command line for the whole simulator — type <span style="color:var(--text-1)">help</span> to see everything it can do.</p>
+
+        <section class="panel-section">
+          <div class="section-head"><span class="section-title">Command Console</span><span class="section-tag">TYPE ‘help’</span></div>
+          <div id="console-log"></div>
+          <input type="text" id="console-input" class="console-input" placeholder="e.g. goto 40 0 -220" autocomplete="off" spellcheck="false"/>
+        </section>
+
+        </div><!-- /tab-panel: console -->
+
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+/* ======================================================================
+   ASSEMBLY_1 — analytic delta-robot FK/IK simulator
+   Geometry (Rf, Re, L, l, motor angles) measured directly from
+   assembly_1.urdf's assembled (zero-config) joint coordinates.
+====================================================================== */
+
+let PHI_DEG = [95.7, 216.3, 336.4];             // motor base angles, measured (assembly_1 CAD)
+const PHI_DEG_ASSEMBLY1 = [95.7, 216.3, 336.4];
+const P_ASSEMBLY1 = { Rf: 80.5, Re: 35.1, L: 80.1, l: 160.0 };
+const ARM_COLORS = [0xd9720f, 0x0f948a, 0x7b52c9];
+let P = { Rf: 80.5, Re: 35.1, L: 80.1, l: 160.0 }; // mm
+const TRAJ_RADIUS = 55, TRAJ_Z = -200;          // shared trajectory footprint (mm)
+
+const D2R = Math.PI / 180;
+
+/* ---------------- DELTA KINEMATICS ---------------- */
+
+function circleIntersect(c1x, c1z, r1, c2x, c2z, r2) {
+  const dx = c2x - c1x, dz = c2z - c1z;
+  const d = Math.hypot(dx, dz);
+  if (d < 1e-9 || d > r1 + r2 + 1e-6 || d < Math.abs(r1 - r2) - 1e-6) return [];
+  const a = (r1 * r1 - r2 * r2 + d * d) / (2 * d);
+  const h2 = r1 * r1 - a * a;
+  const h = h2 > 0 ? Math.sqrt(h2) : 0;
+  const mx = c1x + a * dx / d, mz = c1z + a * dz / d;
+  const ox = -dz / d * h, oz = dx / d * h;
+  return [{ x: mx + ox, z: mz + oz }, { x: mx - ox, z: mz - oz }];
+}
+
+// Given target {x,y,z} (mm, world frame, base at z=0, arms hang to -z),
+// return {ok, theta:[deg,deg,deg], elbows:[{x,y,z}], platformPts:[{x,y,z}]}
+function solveIK(target) {
+  const thetas = [], elbows = [], platformPts = [];
+  let ok = true;
+  for (let i = 0; i < 3; i++) {
+    const phi = PHI_DEG[i] * D2R;
+    const c = Math.cos(phi), s = Math.sin(phi);
+    // rotate target into arm-local frame (x_local = radial, y_local = tangential, z_local = z)
+    const tx = target.x * c + target.y * s;
+    const ty = -target.x * s + target.y * c;
+    const tz = target.z;
+    const Px = tx + P.Re, Pz = tz; // platform point projected into local radial-Z plane
+    const lEff2 = P.l * P.l - ty * ty;
+    if (lEff2 < 0) { ok = false; thetas.push(null); elbows.push(null); platformPts.push(null); continue; }
+    const lEff = Math.sqrt(lEff2);
+    const sols = circleIntersect(P.Rf, 0, P.L, Px, Pz, lEff);
+    if (sols.length === 0) { ok = false; thetas.push(null); elbows.push(null); platformPts.push(null); continue; }
+    // choose the outward elbow (larger radial coordinate) — physical hanging solution;
+    // the other root folds the arm back across the base mount, which isn't physically valid.
+    const e = sols[0].x > sols[1].x ? sols[0] : sols[1];
+    const theta = Math.atan2(e.z, e.x - P.Rf) / D2R;
+    thetas.push(theta);
+    const ex = e.x, ez = e.z;
+    elbows.push({ x: ex * c, y: ex * s, z: ez });
+    platformPts.push({ x: target.x + P.Re * c, y: target.y + P.Re * s, z: target.z });
+  }
+  return { ok, theta: thetas, elbows, platformPts };
+}
+
+// Given motor angles theta[3] (deg), return target {x,y,z} via trilateration, or null.
+function solveFK(thetaDeg) {
+  const C = [];
+  for (let i = 0; i < 3; i++) {
+    const phi = PHI_DEG[i] * D2R, c = Math.cos(phi), s = Math.sin(phi);
+    const th = thetaDeg[i] * D2R;
+    const ex = P.Rf + P.L * Math.cos(th), ez = P.L * Math.sin(th);
+    const Ei = { x: ex * c, y: ex * s, z: ez };
+    C.push({ x: Ei.x - P.Re * c, y: Ei.y - P.Re * s, z: Ei.z });
+  }
+  const [C1, C2, C3] = C;
+  const Ax = 2 * (C2.x - C1.x), Ay = 2 * (C2.y - C1.y), Az = 2 * (C2.z - C1.z);
+  const Bx = 2 * (C3.x - C1.x), By = 2 * (C3.y - C1.y), Bz = 2 * (C3.z - C1.z);
+  const dA = (C2.x ** 2 + C2.y ** 2 + C2.z ** 2) - (C1.x ** 2 + C1.y ** 2 + C1.z ** 2);
+  const dB = (C3.x ** 2 + C3.y ** 2 + C3.z ** 2) - (C1.x ** 2 + C1.y ** 2 + C1.z ** 2);
+  const det = Ax * By - Ay * Bx;
+  if (Math.abs(det) < 1e-9) return null;
+  const x0 = (dA * By - Ay * dB) / det, x1 = (Ay * Bz - Az * By) / det;
+  const y0 = (Ax * dB - dA * Bx) / det, y1 = (Az * Bx - Ax * Bz) / det;
+  const p = x0 - C1.x, x1c = x1;
+  const q = y0 - C1.y, y1c = y1;
+  const aq = x1c * x1c + y1c * y1c + 1;
+  const bq = 2 * p * x1c + 2 * q * y1c - 2 * C1.z;
+  const cq = p * p + q * q + C1.z * C1.z - P.l * P.l;
+  const disc = bq * bq - 4 * aq * cq;
+  if (disc < 0) return null;
+  const sq = Math.sqrt(disc);
+  const z1 = (-bq + sq) / (2 * aq), z2 = (-bq - sq) / (2 * aq);
+  const z = Math.min(z1, z2); // lower / physical solution
+  const x = x0 + x1c * z, y = y0 + y1c * z;
+  return { x, y, z };
+}
+
+/* ---------------- SCENE SETUP ---------------- */
+
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+if (renderer.outputColorSpace !== undefined) renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf4f5f7);
+scene.fog = new THREE.Fog(0xf4f5f7, 900, 2800);
+
+const camera = new THREE.PerspectiveCamera(42, 1, 1, 5000);
+
+const hemi = new THREE.HemisphereLight(0xffffff, 0xcfd3da, 1.05);
+scene.add(hemi);
+const key = new THREE.DirectionalLight(0xffffff, 1.9);
+key.position.set(400, 500, 350);
+scene.add(key);
+const rim = new THREE.DirectionalLight(0xff9d3d, 0.55);
+rim.position.set(-400, 150, -300);
+scene.add(rim);
+const fillL = new THREE.DirectionalLight(0x4fd8d0, 0.3);
+fillL.position.set(-150, -200, 400);
+scene.add(fillL);
+
+const grid = new THREE.GridHelper(700, 24, 0xc3c9d3, 0xe3e6ec);
+grid.position.y = -0.5;
+scene.add(grid);
+// grid is built for XZ plane by default (Y up); we work with Z as vertical "down" (physical),
+// so rotate grid to sit in our X-Y horizontal plane instead... we keep Y as world-up for camera
+// simplicity, and remap robot Z(down) -> world Y(down) below in worldFromMM().
+
+const axesHelper = new THREE.AxesHelper(60);
+axesHelper.position.set(0, 0, 0);
+scene.add(axesHelper);
+let showAxes = false;
+axesHelper.visible = showAxes;
+
+const root = new THREE.Group();
+scene.add(root);
+
+/* Coordinate remap: our kinematics use Z-down-from-base (base plate fixed at z=0,
+   platform hangs to negative z). Three.js scene uses Y-up. Map (x,y,z_kin) -> (x, z_kin, y)
+   so the base plate stays fixed at Y=0 (top) and the platform hangs below it. */
+function worldFromMM(p) {
+  return new THREE.Vector3(p.x, p.z, p.y);
+}
+
+/* ---------------- BUILD STATIC GEOMETRY (base) ---------------- */
+
+const metalMat = new THREE.MeshStandardMaterial({ color: 0xb4bac4, metalness: 0.65, roughness: 0.35 });
+const darkMat = new THREE.MeshStandardMaterial({ color: 0x353b46, metalness: 0.4, roughness: 0.55 });
+const platformMat = new THREE.MeshStandardMaterial({ color: 0x2e3440, metalness: 0.5, roughness: 0.4 });
+
+function buildBase() {
+  const g = new THREE.Group();
+  const plateGeo = new THREE.CylinderGeometry(P.Rf + 30, P.Rf + 30, 8, 48);
+  const plate = new THREE.Mesh(plateGeo, metalMat);
+  plate.position.set(0, 0, 0);
+  g.add(plate);
+  for (let i = 0; i < 3; i++) {
+    const phi = PHI_DEG[i] * D2R;
+    const bx = P.Rf * Math.cos(phi), by = P.Rf * Math.sin(phi);
+    const motor = new THREE.Mesh(new THREE.CylinderGeometry(14, 14, 26, 20), darkMat);
+    const wp = worldFromMM({ x: bx, y: by, z: 0 });
+    motor.position.copy(wp).add(new THREE.Vector3(0, -13, 0));
+    // orient motor axis tangentially
+    motor.rotation.z = Math.PI / 2;
+    motor.rotation.y = -phi;
+    g.add(motor);
+  }
+  return g;
+}
+
+let baseGroup = buildBase();
+root.add(baseGroup);
+
+function rebuildBase() {
+  root.remove(baseGroup);
+  baseGroup = buildBase();
+  root.add(baseGroup);
+}
+
+/* ---------------- DYNAMIC GEOMETRY (arms, platform) ---------------- */
+
+const dynGroup = new THREE.Group();
+root.add(dynGroup);
+
+const armMats = ARM_COLORS.map(c => new THREE.MeshStandardMaterial({ color: c, metalness: 0.3, roughness: 0.45 }));
+const jointMat = new THREE.MeshStandardMaterial({ color: 0x6b7280, metalness: 0.55, roughness: 0.3 });
+
+function makeRod(radius) {
+  const geo = new THREE.CylinderGeometry(radius, radius, 1, 12);
+  return new THREE.Mesh(geo, darkMat);
+}
+
+const bicepMeshes = [], rodMeshes = [], elbowJointMeshes = [], platJointMeshes = [];
+let platformMesh, centerRod, payloadMesh, payloadLinkMesh;
+let currentPayloadKg = 0;
+const payloadMat = new THREE.MeshStandardMaterial({ color: 0x3a3f4a, metalness: 0.75, roughness: 0.3 });
+
+function buildDynamic() {
+  dynGroup.clear();
+  bicepMeshes.length = 0; rodMeshes.length = 0; elbowJointMeshes.length = 0; platJointMeshes.length = 0;
+
+  for (let i = 0; i < 3; i++) {
+    const bicep = makeRod(7); bicep.material = armMats[i]; dynGroup.add(bicep); bicepMeshes.push(bicep);
+    const rodA = makeRod(3.5); rodA.material = darkMat; dynGroup.add(rodA); rodMeshes.push(rodA);
+    const rodB = makeRod(3.5); rodB.material = darkMat; dynGroup.add(rodB); rodMeshes.push(rodB);
+    const ej = new THREE.Mesh(new THREE.SphereGeometry(6.5, 16, 12), jointMat); dynGroup.add(ej); elbowJointMeshes.push(ej);
+    const pj = new THREE.Mesh(new THREE.SphereGeometry(5, 16, 12), jointMat); dynGroup.add(pj); platJointMeshes.push(pj);
+  }
+  const platGeo = new THREE.CylinderGeometry(P.Re + 14, P.Re + 14, 7, 40);
+  platformMesh = new THREE.Mesh(platGeo, platformMat);
+  dynGroup.add(platformMesh);
+
+  // visual payload — a weight hanging below the platform, sized by mass
+  payloadLinkMesh = makeRod(2.5); payloadLinkMesh.material = darkMat; payloadLinkMesh.visible = false;
+  platformMesh.add(payloadLinkMesh);
+  payloadMesh = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 16), payloadMat);
+  payloadMesh.visible = false;
+  platformMesh.add(payloadMesh);
+  setPayloadVisual(currentPayloadKg);
+}
+buildDynamic();
+
+function setPayloadVisual(kg) {
+  currentPayloadKg = kg || 0;
+  if (!payloadMesh) return;
+  if (currentPayloadKg <= 0) { payloadMesh.visible = false; payloadLinkMesh.visible = false; return; }
+  const r = 7 + Math.cbrt(currentPayloadKg) * 22; // cube-root scaling ~ constant-density sphere, kept readable at small masses
+  const linkLen = 16;
+  payloadMesh.visible = true; payloadLinkMesh.visible = true;
+  payloadMesh.scale.setScalar(r);
+  payloadMesh.position.set(0, -(linkLen + r), 0);
+  payloadLinkMesh.position.set(0, -linkLen / 2, 0);
+  payloadLinkMesh.scale.set(1, linkLen, 1);
+}
+
+function placeCylinderBetween(mesh, a, b, radius) {
+  const dir = new THREE.Vector3().subVectors(b, a);
+  const len = dir.length();
+  const mid = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
+  mesh.position.copy(mid);
+  mesh.scale.set(1, Math.max(len, 0.001), 1);
+  if (radius !== undefined) mesh.scale.x = mesh.scale.z = 1;
+  const quat = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+  mesh.quaternion.copy(quat);
+}
+
+let lastPose = null;
+
+function updatePose(target, ikResult) {
+  const wTarget = worldFromMM(target);
+  platformMesh.position.copy(wTarget);
+
+  for (let i = 0; i < 3; i++) {
+    const phi = PHI_DEG[i] * D2R;
+    const base = worldFromMM({ x: P.Rf * Math.cos(phi), y: P.Rf * Math.sin(phi), z: 0 });
+    const elbowMM = ikResult.elbows[i];
+    const platMM = ikResult.platformPts[i];
+    if (!elbowMM || !platMM) continue;
+    const elbow = worldFromMM(elbowMM);
+    const plat = worldFromMM(platMM);
+
+    placeCylinderBetween(bicepMeshes[i], base, elbow);
+    elbowJointMeshes[i].position.copy(elbow);
+    platJointMeshes[i].position.copy(plat);
+
+    // two cosmetic parallel rods, offset along local tangential direction
+    const tangent = new THREE.Vector3(-Math.sin(phi), Math.cos(phi), 0).multiplyScalar(9);
+    const tOffset = worldFromMM({ x: tangent.x, y: tangent.y, z: 0 }).sub(worldFromMM({ x: 0, y: 0, z: 0 }));
+    placeCylinderBetween(rodMeshes[i * 2], elbow.clone().add(tOffset), plat.clone().add(tOffset));
+    placeCylinderBetween(rodMeshes[i * 2 + 1], elbow.clone().sub(tOffset), plat.clone().sub(tOffset));
+  }
+  lastPose = { target, ikResult };
+}
+
+/* ---------------- WORKSPACE ENVELOPE (sampled) ---------------- */
+
+let workspacePoints = null;
+function buildWorkspace() {
+  if (workspacePoints) { dynGroup.remove(workspacePoints); workspacePoints.geometry.dispose(); workspacePoints = null; }
+  const pts = [], cols = [];
+  const R = P.Rf + P.L + P.l;
+  const N = 9000;
+  const c1 = new THREE.Color(0x4fd8d0), c2 = new THREE.Color(0xff9d3d);
+  for (let i = 0; i < N; i++) {
+    // bias sampling toward a cylindrical shell (r,theta,z) instead of a uniform box —
+    // far fewer wasted samples than picking x,y uniformly in a square.
+    const r = Math.sqrt(Math.random()) * R;
+    const ang = Math.random() * Math.PI * 2;
+    const x = r * Math.cos(ang), y = r * Math.sin(ang);
+    const z = -Math.random() * (P.L + P.l + 40) - 10;
+    const res = solveIK({ x, y, z });
+    if (res.ok) {
+      const w = worldFromMM({ x, y, z });
+      pts.push(w.x, w.y, w.z);
+      const t = Math.min(r / R, 1);
+      const col = c1.clone().lerp(c2, t);
+      cols.push(col.r, col.g, col.b);
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+  const mat = new THREE.PointsMaterial({
+    size: 3.4, vertexColors: true, transparent: true, opacity: 0.62,
+    sizeAttenuation: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  });
+  workspacePoints = new THREE.Points(geo, mat);
+  dynGroup.add(workspacePoints);
+  document.getElementById('ws-count').textContent = (pts.length / 3).toLocaleString() + ' pts';
+}
+
+/* ---------------- TRAJECTORY PATH CURVE ---------------- */
+
+let trajLine = null;
+function buildTrajectoryLine(name) {
+  if (trajLine) { dynGroup.remove(trajLine); trajLine.geometry.dispose(); trajLine = null; }
+  if (!name) return;
+  const fn = TRAJECTORIES[name];
+  const pts = [];
+  const STEPS = 220;
+  try {
+    for (let i = 0; i <= STEPS; i++) {
+      const t = i / STEPS;
+      const p = fn(t, TRAJ_RADIUS, TRAJ_Z);
+      pts.push(worldFromMM(p));
+    }
+  } catch (err) {
+    console.error('trajectory path sampling failed:', err);
+    return;
+  }
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  const mat = new THREE.LineBasicMaterial({ color: 0xffd08a, transparent: true, opacity: 0.85 });
+  trajLine = new THREE.Line(geo, mat);
+  dynGroup.add(trajLine);
+}
+
+
+/* ---------------- CAMERA CONTROLS (custom, no external deps) ---------------- */
+
+const controlsTarget = new THREE.Vector3(0, -140, 0);
+let camDist = 480, camTheta = 0.9, camPhi = 1.05;
+function updateCameraFromSpherical() {
+  const sp = camPhi, th = camTheta;
+  camera.position.set(
+    controlsTarget.x + camDist * Math.sin(sp) * Math.sin(th),
+    controlsTarget.y + camDist * Math.cos(sp),
+    controlsTarget.z + camDist * Math.sin(sp) * Math.cos(th)
+  );
+  camera.lookAt(controlsTarget);
+}
+updateCameraFromSpherical();
+
+let dragging = null, lastX = 0, lastY = 0;
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('pointerdown', e => {
+  dragging = e.button === 2 ? 'pan' : 'orbit';
+  lastX = e.clientX; lastY = e.clientY;
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointerup', () => dragging = null);
+canvas.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  const dx = e.clientX - lastX, dy = e.clientY - lastY;
+  lastX = e.clientX; lastY = e.clientY;
+  if (dragging === 'orbit') {
+    camTheta -= dx * 0.008;
+    camPhi = Math.min(Math.max(camPhi - dy * 0.008, 0.15), Math.PI - 0.15);
+  } else {
+    const right = new THREE.Vector3(Math.cos(camTheta), 0, -Math.sin(camTheta));
+    const up = new THREE.Vector3(0, 1, 0);
+    controlsTarget.addScaledVector(right, -dx * 0.6);
+    controlsTarget.addScaledVector(up, dy * 0.6);
+  }
+  updateCameraFromSpherical();
+});
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  camDist = Math.min(Math.max(camDist * (1 + e.deltaY * 0.001), 120), 2000);
+  updateCameraFromSpherical();
+}, { passive: false });
+
+function resize() {
+  const w = document.getElementById('viewport').clientWidth;
+  const h = document.getElementById('viewport').clientHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+
+/* ---------------- UI WIRING ---------------- */
+
+const sliderInputs = [];
+function buildMotorSliders() {
+  const container = document.getElementById('motor-sliders');
+  container.innerHTML = '';
+  sliderInputs.length = 0;
+  for (let i = 0; i < 3; i++) {
+    const row = document.createElement('div'); row.className = 'joint-row';
+    const head = document.createElement('div'); head.className = 'joint-row-head';
+    const name = document.createElement('span'); name.className = 'joint-name'; name.textContent = 'θ' + '₁₂₃'[i];
+    name.style.color = \`var(--arm\${i + 1})\`;
+    const val = document.createElement('span'); val.className = 'joint-val'; val.textContent = '0.0°';
+    head.appendChild(name); head.appendChild(val);
+    const input = document.createElement('input'); input.type = 'range'; input.min = -100; input.max = 45; input.step = 0.5; input.value = 0;
+    input.addEventListener('input', () => {
+      val.textContent = parseFloat(input.value).toFixed(1) + '°';
+      onMotorSliderChange();
+    });
+    row.appendChild(head); row.appendChild(input);
+    container.appendChild(row);
+    sliderInputs.push({ input, val });
+  }
+}
+buildMotorSliders();
+
+let currentTrajectory = null;
+function stopTrajectory() {
+  currentTrajectory = null;
+  document.querySelectorAll('#traj-chips .chip').forEach(c => c.classList.remove('active'));
+  document.getElementById('btn-play').classList.remove('active');
+  buildTrajectoryLine(null);
+}
+
+function onMotorSliderChange() {
+  stopTrajectory();
+  const thetas = sliderInputs.map(s => parseFloat(s.input.value));
+  const t = solveFK(thetas);
+  if (!t) { setStatus(false); return; }
+  const r = solveIK(t);
+  updatePose(t, r);
+  setReadout(t, r.ok);
+}
+
+function setSlidersFromTheta(thetas) {
+  thetas.forEach((th, i) => {
+    if (th === null) return;
+    sliderInputs[i].input.value = th;
+    sliderInputs[i].val.textContent = th.toFixed(1) + '°';
+  });
+}
+
+function setReadout(t, ok) {
+  document.getElementById('ro-x').textContent = t.x.toFixed(1);
+  document.getElementById('ro-y').textContent = t.y.toFixed(1);
+  document.getElementById('ro-z').textContent = t.z.toFixed(1);
+  const radial = Math.hypot(t.x, t.y);
+  const statusEl = document.getElementById('ro-status');
+  statusEl.textContent = (ok ? '' : '⚠ near/at limit · ') + \`reach · radial \${radial.toFixed(0)}mm · z \${t.z.toFixed(0)}mm\`;
+  statusEl.style.color = ok ? '' : 'var(--red)';
+}
+
+function setStatus(ok) {
+  document.getElementById('ro-status').textContent = ok ? '' : '⚠ target unreachable';
+  document.getElementById('ro-status').style.color = ok ? '' : 'var(--red)';
+}
+
+function goToTarget(t) {
+  const r = solveIK(t);
+  if (!r.ok) { setStatus(false); return false; }
+  updatePose(t, r);
+  setSlidersFromTheta(r.theta);
+  setReadout(t, true);
+  return true;
+}
+
+/* geometry params */
+['p-Rf', 'p-Re', 'p-L', 'p-l'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    P.Rf = parseFloat(document.getElementById('p-Rf').value) || P.Rf;
+    P.Re = parseFloat(document.getElementById('p-Re').value) || P.Re;
+    P.L = parseFloat(document.getElementById('p-L').value) || P.L;
+    P.l = parseFloat(document.getElementById('p-l').value) || P.l;
+    rebuildBase();
+    buildDynamic();
+    if (workspacePoints) buildWorkspace();
+    onMotorSliderChange();
+  });
+});
+
+document.getElementById('btn-solve-ik').addEventListener('click', () => {
+  stopTrajectory();
+  const t = {
+    x: parseFloat(document.getElementById('ik-x').value) || 0,
+    y: parseFloat(document.getElementById('ik-y').value) || 0,
+    z: parseFloat(document.getElementById('ik-z').value) || 0,
+  };
+  goToTarget(t);
+});
+document.getElementById('btn-reset-ik').addEventListener('click', () => {
+  document.getElementById('ik-x').value = 0;
+  document.getElementById('ik-y').value = 0;
+  document.getElementById('ik-z').value = -200;
+});
+
+document.getElementById('btn-home').addEventListener('click', () => {
+  stopTrajectory();
+  document.getElementById('ik-x').value = 0;
+  document.getElementById('ik-y').value = 0;
+  document.getElementById('ik-z').value = -200;
+  goToTarget({ x: 0, y: 0, z: -200 });
+});
+
+let wireframe = false;
+document.getElementById('btn-wire').addEventListener('click', (e) => {
+  wireframe = !wireframe;
+  [...armMats, metalMat, darkMat, platformMat, jointMat].forEach(m => m.wireframe = wireframe);
+  e.target.classList.toggle('active', wireframe);
+});
+document.getElementById('btn-view').addEventListener('click', () => {
+  camDist = 480; camTheta = 0.9; camPhi = 1.05;
+  controlsTarget.set(0, -140, 0);
+  updateCameraFromSpherical();
+});
+
+/* trajectories */
+const TRAJECTORIES = {
+  ellipse_pfe_kin: (t) => {
+    const A = 0.25, B = 0.06, p = 1;
+    const D = Math.PI * Math.sqrt((A * A + B * B) / 2);
+    const period = 2 * p * D; // one full back-and-forth cycle, seamless loop at t=1
+    const traj = CL.trajectoire(p, t * period, A, B);
+    return { x: traj.P[0] * 1000, y: traj.P[1] * 1000, z: traj.P[2] * 1000 };
+  },
+  circle: (t, Rc, zc) => ({ x: Rc * Math.cos(2 * Math.PI * t), y: Rc * Math.sin(2 * Math.PI * t), z: zc }),
+  figure8: (t, Rc, zc) => { const a = 2 * Math.PI * t; return { x: Rc * Math.sin(a), y: Rc * Math.sin(a) * Math.cos(a), z: zc }; },
+  spiral: (t, Rc, zc) => { const loops = 3; const r = Rc * (0.25 + 0.75 * t); const a = 2 * Math.PI * loops * t; return { x: r * Math.cos(a), y: r * Math.sin(a), z: zc }; },
+  helix: (t, Rc, zc) => { const loops = 3; const a = 2 * Math.PI * loops * t; return { x: Rc * Math.cos(a), y: Rc * Math.sin(a), z: zc - 45 + 90 * t }; },
+  square: (t, Rc, zc) => {
+    const tt = ((t % 1) + 1) % 1;           // guard against t landing exactly on 1.0
+    const seg = Math.min(Math.floor(tt * 4), 3);
+    const f = tt * 4 - seg;
+    const pts = [[-Rc, -Rc], [Rc, -Rc], [Rc, Rc], [-Rc, Rc]];
+    const a = pts[seg], b = pts[(seg + 1) % 4];
+    return { x: a[0] + (b[0] - a[0]) * f, y: a[1] + (b[1] - a[1]) * f, z: zc };
+  },
+  rose: (t, Rc, zc) => { const k = 3; const a = 2 * Math.PI * t; const r = Rc * Math.cos(k * a); return { x: r * Math.cos(a), y: r * Math.sin(a), z: zc }; },
+};
+
+document.getElementById('traj-chips').addEventListener('click', (e) => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  stopSimulinkPlayback();
+  clearCLPathLines();
+  setPayloadVisual(0);
+  document.querySelectorAll('#traj-chips .chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  useGeometryPreset(chip.dataset.traj === 'ellipse_pfe_kin' ? 'pfe' : 'assembly1');
+  currentTrajectory = { name: chip.dataset.traj, t: 0 };
+  document.getElementById('btn-play').classList.add('active');
+  buildTrajectoryLine(chip.dataset.traj);
+});
+document.getElementById('btn-play').addEventListener('click', () => {
+  stopSimulinkPlayback();
+  if (!currentTrajectory) {
+    clearCLPathLines();
+    setPayloadVisual(0);
+    const first = document.querySelector('#traj-chips .chip');
+    first.classList.add('active');
+    useGeometryPreset(first.dataset.traj === 'ellipse_pfe_kin' ? 'pfe' : 'assembly1');
+    currentTrajectory = { name: first.dataset.traj, t: 0 };
+    buildTrajectoryLine(first.dataset.traj);
+  }
+  document.getElementById('btn-play').classList.add('active');
+});
+document.getElementById('btn-stop').addEventListener('click', stopTrajectory);
+
+let trajSpeed = 1;
+document.getElementById('traj-speed').addEventListener('input', (e) => {
+  trajSpeed = parseFloat(e.target.value);
+  document.getElementById('traj-speed-val').textContent = trajSpeed.toFixed(1) + '×';
+});
+
+/* ---------------- SIMULINK CSV IMPORT / PLAYBACK ----------------
+   Export a Time column + 3 signal columns from Simulink (To Workspace →
+   writematrix(...), or Simulation Data Inspector → Export → CSV) and drop
+   the file here. Either motor angles (θ1,θ2,θ3 in degrees) or an
+   end-effector path (X,Y,Z in mm) — pick with the mode chips. */
+
+let simulinkData = null;   // { time:[], c1:[], c2:[], c3:[] }
+let simulinkMode = 'angles';
+let simulinkPlaying = false;
+let simulinkT = 0;         // seconds since start of the imported clip
+let simulinkSpeed = 1;
+let simulinkLoop = false;
+
+function parseSimulinkCSV(text) {
+  const lines = text.split(/\\r?\\n/).map(l => l.trim()).filter(l => l.length);
+  if (!lines.length) throw new Error('file is empty');
+  const splitLine = (l) => (l.includes(',') ? l.split(',') : l.split(/\\s+/)).map(c => c.trim());
+  let rows = lines.map(splitLine);
+  let header = null;
+  const looksNumeric = (c) => c !== '' && isFinite(parseFloat(c)) && /^[+\\-.\\d eE]+$/.test(c);
+  if (!rows[0].every(looksNumeric)) { header = rows[0].map(h => h.toLowerCase()); rows = rows.slice(1); }
+  if (rows.length < 2) throw new Error('need at least 2 data rows');
+  const data = rows.map(r => r.map(Number));
+  if (data.some(r => r.length < 4 || r.some(Number.isNaN))) throw new Error('need 4 numeric columns: time + 3 signals');
+  const time = data.map(r => r[0]), c1 = data.map(r => r[1]), c2 = data.map(r => r[2]), c3 = data.map(r => r[3]);
+  let mode = 'angles';
+  if (header && /\\bx\\b/.test(header.join(' ')) && /\\by\\b/.test(header.join(' ')) && /\\bz\\b/.test(header.join(' '))) mode = 'xyz';
+  return { time, c1, c2, c3, mode, n: data.length, duration: time[time.length - 1] - time[0] };
+}
+
+function interpAt(values, timeArr, t) {
+  if (t <= timeArr[0]) return values[0];
+  if (t >= timeArr[timeArr.length - 1]) return values[values.length - 1];
+  let lo = 0, hi = timeArr.length - 1;
+  while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (timeArr[mid] <= t) lo = mid; else hi = mid; }
+  const t0 = timeArr[lo], t1 = timeArr[hi], f = (t - t0) / ((t1 - t0) || 1);
+  return values[lo] + (values[hi] - values[lo]) * f;
+}
+
+function applySimulinkAngles(thetas) {
+  thetas.forEach((v, i) => { sliderInputs[i].input.value = v; sliderInputs[i].val.textContent = v.toFixed(1) + '°'; });
+  const target = solveFK(thetas);
+  if (!target) { setStatus(false); return; }
+  const r = solveIK(target);
+  updatePose(target, r);
+  setReadout(target, r.ok);
+}
+function applySimulinkXYZ(x, y, z) {
+  const r = solveIK({ x, y, z });
+  if (!r.ok) { setStatus(false); return; }
+  updatePose({ x, y, z }, r);
+  setSlidersFromTheta(r.theta);
+  setReadout({ x, y, z }, true);
+}
+function applySimulinkAt(absT) {
+  const v1 = interpAt(simulinkData.c1, simulinkData.time, absT);
+  const v2 = interpAt(simulinkData.c2, simulinkData.time, absT);
+  const v3 = interpAt(simulinkData.c3, simulinkData.time, absT);
+  if (simulinkMode === 'angles') applySimulinkAngles([v1, v2, v3]);
+  else applySimulinkXYZ(v1, v2, v3);
+}
+function stopSimulinkPlayback() {
+  simulinkPlaying = false;
+  const btn = document.getElementById('btn-simulink-play');
+  if (btn) btn.classList.remove('active');
+}
+
+document.getElementById('btn-simulink-upload').addEventListener('click', () => document.getElementById('simulink-file').click());
+document.getElementById('simulink-file').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      simulinkData = parseSimulinkCSV(String(ev.target.result));
+      simulinkMode = simulinkData.mode;
+      simulinkT = 0;
+      document.getElementById('simulink-info').textContent =
+        \`loaded \${file.name} — \${simulinkData.n} samples, \${simulinkData.duration.toFixed(2)}s, detected: \${simulinkMode === 'angles' ? 'motor angles' : 'end‑effector XYZ'}\`;
+      document.getElementById('simulink-controls').style.display = 'block';
+      document.querySelectorAll('#simulink-mode-chips .chip').forEach(c => c.classList.toggle('active', c.dataset.mode === simulinkMode));
+      document.getElementById('simulink-scrub').value = 0;
+      document.getElementById('simulink-time').textContent = \`0.00 / \${simulinkData.duration.toFixed(2)} s\`;
+      applySimulinkAt(simulinkData.time[0]);
+    } catch (err) {
+      document.getElementById('simulink-info').textContent = '⚠ ' + err.message;
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+document.getElementById('simulink-mode-chips').addEventListener('click', (e) => {
+  const chip = e.target.closest('.chip');
+  if (!chip || !simulinkData) return;
+  simulinkMode = chip.dataset.mode;
+  document.querySelectorAll('#simulink-mode-chips .chip').forEach(c => c.classList.toggle('active', c === chip));
+  applySimulinkAt(simulinkData.time[0] + simulinkT);
+});
+
+document.getElementById('btn-simulink-play').addEventListener('click', (e) => {
+  if (!simulinkData) return;
+  stopTrajectory();
+  simulinkPlaying = true;
+  e.target.classList.add('active');
+});
+document.getElementById('btn-simulink-stop').addEventListener('click', (e) => {
+  simulinkPlaying = false;
+  simulinkT = 0;
+  document.getElementById('btn-simulink-play').classList.remove('active');
+  if (simulinkData) {
+    document.getElementById('simulink-scrub').value = 0;
+    document.getElementById('simulink-time').textContent = \`0.00 / \${simulinkData.duration.toFixed(2)} s\`;
+    applySimulinkAt(simulinkData.time[0]);
+  }
+});
+document.getElementById('simulink-speed').addEventListener('input', (e) => {
+  simulinkSpeed = parseFloat(e.target.value);
+  document.getElementById('simulink-speed-val').textContent = simulinkSpeed.toFixed(1) + '×';
+});
+document.getElementById('simulink-scrub').addEventListener('input', (e) => {
+  if (!simulinkData) return;
+  simulinkT = parseFloat(e.target.value) * simulinkData.duration;
+  applySimulinkAt(simulinkData.time[0] + simulinkT);
+  document.getElementById('simulink-time').textContent = \`\${simulinkT.toFixed(2)} / \${simulinkData.duration.toFixed(2)} s\`;
+});
+document.getElementById('toggle-simulink-loop').addEventListener('click', (e) => {
+  simulinkLoop = !e.target.classList.contains('on');
+  e.target.classList.toggle('on', simulinkLoop);
+});
+
+/* ====================================================================
+   PFE CONTROL LAB
+   Reconstructed from the uploaded .slx files by unzipping them (.slx is
+   a zip archive) and reading the block-diagram XML + embedded MATLAB
+   Function scripts (MDD, MGI, MGD, trajectoire, saturation) directly.
+   Geometry/dynamics parameters are Boudjedir's Table 2.1 values found
+   in the models. Sliding-surface and reaching-law formulas below were
+   traced from the Simulink block wiring (Abs/Power/Signum/Product/Sum/
+   Fractional-derivative blocks) — see chat for the derivation.
+==================================================================== */
+
+const CL = {
+  phi: [0, 2 * Math.PI / 3, 4 * Math.PI / 3],
+  l1: 0.205, l2: 0.380, r: 0.15 - 0.024,
+  mn: 0.042, mfb: 0.028, mb: 0.098, mc: 0.015, g: 9.81, Im: 3.72e-5,
+};
+
+// exact port of MGI(P) -> alpha[3]  (Stateflow chart "MGI")
+CL.MGI = function (Pxyz) {
+  const { l1, l2, r, phi } = CL;
+  const [X, Y, Z] = Pxyz;
+  const B = 2 * Z * l1;
+  const alpha = [0, 0, 0];
+  for (let i = 0; i < 3; i++) {
+    const A = 2 * r * l1 - 2 * X * l1 * Math.cos(phi[i]) - 2 * Y * l1 * Math.sin(phi[i]);
+    const Cc = l2 * l2 - l1 * l1 - r * r - X * X - Y * Y - Z * Z + 2 * X * r * Math.cos(phi[i]) + 2 * Y * r * Math.sin(phi[i]);
+    alpha[i] = 2 * Math.atan((2 * B + Math.sqrt(Math.abs(4 * B * B + 4 * (A + Cc) * (A - Cc)))) / (2 * (A + Cc)));
+  }
+  return alpha;
+};
+
+// exact port of MDD(alpha,dalpha,T,P,dP) -> ddalpha[3]  (Stateflow chart "MDD")
+CL.MDD = function (alpha, dalpha, T, Pxyz, dPxyz, payload = 0) {
+  const { phi, l1, mn, mfb, mb, mc, g, Im } = CL;
+  const Pv = [[Pxyz[0]], [Pxyz[1]], [Pxyz[2]]];
+  const dPv = [[dPxyz[0]], [dPxyz[1]], [dPxyz[2]]];
+  const sub3 = (a, b) => a.map((r, i) => [r[0] - b[i][0]]);
+  const dot3 = (a, b) => a[0][0] * b[0][0] + a[1][0] * b[1][0] + a[2][0] * b[2][0];
+  const scal = (a, s) => a.map(r => [r[0] * s]);
+
+  const s = [], b = [], ds = [], db = [];
+  for (let i = 0; i < 3; i++) {
+    const c = Math.cos(phi[i]), sn = Math.sin(phi[i]);
+    const rot = (v) => [[c * v[0] - sn * v[1]], [sn * v[0] + c * v[1]], [v[2]]];
+    const armPt = rot([CL.r + l1 * Math.cos(alpha[i]), 0, -l1 * Math.sin(alpha[i])]);
+    s.push(sub3(Pv, armPt));
+    const bVec = rot([-l1 * Math.sin(alpha[i]), 0, -l1 * Math.cos(alpha[i])]);
+    b.push(bVec);
+    ds.push(sub3(dPv, scal(bVec, dalpha[i])));
+    const dbVec = rot([-l1 * Math.cos(alpha[i]), 0, l1 * Math.sin(alpha[i])]);
+    db.push(scal(dbVec, dalpha[i]));
+  }
+
+  // J = inv([s1';s2';s3']) * diag(s_i' b_i)
+  const Smat = [[s[0][0][0], s[0][1][0], s[0][2][0]], [s[1][0][0], s[1][1][0], s[1][2][0]], [s[2][0][0], s[2][1][0], s[2][2][0]]];
+  function inv3(m) {
+    const [a, bb, c] = m[0], [d, e, f] = m[1], [g2, h, i] = m[2];
+    const A = e * i - f * h, B = -(d * i - f * g2), C = d * h - e * g2;
+    const D = -(bb * i - c * h), E = a * i - c * g2, F = -(a * h - bb * g2);
+    const G = bb * f - c * e, H = -(a * f - c * d), I = a * e - bb * d;
+    const det = a * A + bb * B + c * C;
+    return [[A / det, D / det, G / det], [B / det, E / det, H / det], [C / det, F / det, I / det]];
+  }
+  function mul33(A, B) {
+    const R = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) for (let k = 0; k < 3; k++) R[i][j] += A[i][k] * B[k][j];
+    return R;
+  }
+  const SmatInv = inv3(Smat);
+  const sb = [dot3(s[0], b[0]), dot3(s[1], b[1]), dot3(s[2], b[2])];
+  const diagSB = [[sb[0], 0, 0], [0, sb[1], 0], [0, 0, sb[2]]];
+  const J = mul33(SmatInv, diagSB);
+
+  const dS = [[ds[0][0][0], ds[0][1][0], ds[0][2][0]], [ds[1][0][0], ds[1][1][0], ds[1][2][0]], [ds[2][0][0], ds[2][1][0], ds[2][2][0]]];
+  const term1 = mul33(dS.map(r => r), J); // -[ds1';ds2';ds3']*J  (sign applied below)
+  const rhs = [
+    [dot3(ds[0], b[0]) + dot3(s[0], db[0]), 0, 0],
+    [0, dot3(ds[1], b[1]) + dot3(s[1], db[1]), 0],
+    [0, 0, dot3(ds[2], b[2]) + dot3(s[2], db[2])],
+  ];
+  const negTerm1 = term1.map(r => r.map(v => -v));
+  const sumMat = negTerm1.map((r, i) => r.map((v, j) => v + rhs[i][j]));
+  const dJ = mul33(SmatInv, sumMat);
+
+  const mnt = mn + mfb + payload;
+  const JT = [[J[0][0], J[1][0], J[2][0]], [J[0][1], J[1][1], J[2][1]], [J[0][2], J[1][2], J[2][2]]];
+  const Tgn = JT.map(row => mnt * (row[0] * 0 + row[1] * 0 + row[2] * (-g)));
+  const mbr = mb + mc + (2 / 3) * mfb;
+  const rgb = l1 * (0.5 * mb + mc + (2 / 3) * mfb) / mbr;
+  const Tgb = alpha.map(a => rgb * mbr * g * Math.cos(a));
+  const Ibc = l1 * l1 * (mb / 3 + mc + (2 / 3) * mfb);
+  const IbScalar = Im * 144 + Ibc;
+
+  const mJtJ = mul33(JT, J).map(row => row.map(v => v * mnt));
+  const IbMat = [[IbScalar, 0, 0], [0, IbScalar, 0], [0, 0, IbScalar]];
+  const Mfull = IbMat.map((row, i) => row.map((v, j) => v + mJtJ[i][j]));
+  const Jdqdot = [0, 1, 2].map(i => dJ[i][0] * dalpha[0] + dJ[i][1] * dalpha[1] + dJ[i][2] * dalpha[2]);
+  const JtMntdJdq = JT.map(row => mnt * (row[0] * Jdqdot[0] + row[1] * Jdqdot[1] + row[2] * Jdqdot[2]));
+  const rhsVec = [0, 1, 2].map(i => T[i] - JtMntdJdq[i] + Tgn[i] + Tgb[i]);
+  const Minv = inv3(Mfull);
+  let ddalpha = [0, 1, 2].map(i => Minv[i][0] * rhsVec[0] + Minv[i][1] * rhsVec[1] + Minv[i][2] * rhsVec[2]);
+  if (ddalpha.some(v => Number.isNaN(v))) ddalpha = [0, 0, 0];
+  return ddalpha;
+};
+
+// exact port of trajectoire(p,t) -> {P, dP, ddP}
+CL.trajectoire = function (p, t, A, B) {
+  const D = Math.PI * Math.sqrt((A * A + B * B) / 2);
+  const w = Math.PI / (p * D);
+  const Xdes = 0.25 - A * (1 - Math.cos(w * t));
+  const Zdes = -0.43 + B * Math.sin(w * t);
+  const dXdes = -A * w * Math.sin(w * t);
+  const dZdes = B * w * Math.cos(w * t);
+  const ddXdes = A * w * w * Math.cos(w * t);
+  const ddZdes = -B * w * w * Math.sin(w * t);
+  return { P: [Xdes, 0, Zdes], dP: [dXdes, 0, dZdes], ddP: [ddXdes, 0, ddZdes] };
+};
+
+CL.saturation = function (s, epsilon = 10) {
+  return Math.abs(s) < epsilon ? s / epsilon : Math.sign(s);
+};
+
+/* Additional test trajectories at the PFE robot's own scale (meters), each with
+   analytic P(t) and dP(t) so they plug into the same simulation loop as the
+   original elliptical reference. Zc is fixed at -0.43 (same center as the
+   original trajectoire) unless the shape uses B as its own vertical term. */
+const CL_ZC = -0.43;
+const CL_TRAJECTORIES = {
+  ellipse_pfe: (t, prm) => CL.trajectoire(prm.p, t, prm.A, prm.B),
+
+  circle: (t, prm) => {
+    const w = 2 * Math.PI * prm.p / prm.tf, R = prm.A, Zc = CL_ZC;
+    return { P: [R * Math.cos(w * t), R * Math.sin(w * t), Zc], dP: [-R * w * Math.sin(w * t), R * w * Math.cos(w * t), 0] };
+  },
+  figure8: (t, prm) => {
+    const w = 2 * Math.PI * prm.p / prm.tf, R = prm.A, Zc = CL_ZC;
+    return { P: [R * Math.sin(w * t), (R / 2) * Math.sin(2 * w * t), Zc], dP: [R * w * Math.cos(w * t), R * w * Math.cos(2 * w * t), 0] };
+  },
+  spiral: (t, prm) => {
+    const w = 2 * Math.PI * prm.p / prm.tf, R = prm.A, Zc = CL_ZC;
+    const r = R * (0.2 + 0.8 * t / prm.tf), dr = R * 0.8 / prm.tf;
+    const th = w * t, c = Math.cos(th), s = Math.sin(th);
+    return { P: [r * c, r * s, Zc], dP: [dr * c - r * s * w, dr * s + r * c * w, 0] };
+  },
+  helix: (t, prm) => {
+    const w = 2 * Math.PI * prm.p / prm.tf, R = prm.A, Az = prm.B || 0.05, wz = 2 * Math.PI / prm.tf;
+    return {
+      P: [R * Math.cos(w * t), R * Math.sin(w * t), CL_ZC + Az * Math.sin(wz * t)],
+      dP: [-R * w * Math.sin(w * t), R * w * Math.cos(w * t), Az * wz * Math.cos(wz * t)],
+    };
+  },
+  square: (t, prm) => {
+    const cyc = prm.tf / prm.p, tt = ((t % cyc) + cyc) % cyc / cyc; // 0..1 per lap
+    const R = prm.A, Zc = CL_ZC;
+    const pts = [[-R, -R], [R, -R], [R, R], [-R, R]];
+    const seg = Math.min(Math.floor(tt * 4), 3), f = tt * 4 - seg;
+    const a = pts[seg], b = pts[(seg + 1) % 4];
+    const v = [(b[0] - a[0]) / (cyc / 4), (b[1] - a[1]) / (cyc / 4)];
+    return { P: [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f, Zc], dP: [v[0], v[1], 0] };
+  },
+  rose: (t, prm) => {
+    const w = 2 * Math.PI * prm.p / prm.tf, R = prm.A, Zc = CL_ZC, k = 3;
+    const th = w * t, r = R * Math.cos(k * th), dr = -R * k * w * Math.sin(k * th);
+    const c = Math.cos(th), s = Math.sin(th);
+    return { P: [r * c, r * s, Zc], dP: [dr * c - r * s * w, dr * s + r * c * w, 0] };
+  },
+};
+const CL_TRAJ_NAMES = { ellipse_pfe: 'Ellipse (PFE)', circle: 'Circle', figure8: 'Figure‑8', spiral: 'Spiral', helix: 'Helix', square: 'Square', rose: 'Rose' };
+const CL_TRAJ_COLORS = { ellipse_pfe: '#d9720f', circle: '#0f948a', figure8: '#7b52c9', spiral: '#d43d3d', helix: '#1f9d63', square: '#3a7bd5', rose: '#c2410c' };
+
+// Grünwald-Letnikov fractional derivative, growing memory, per signal instance
+class GLFrac {
+  constructor(order) { this.order = order; this.w = [1]; this.hist = []; }
+  push(x, h) {
+    this.hist.push(x);
+    const k = this.hist.length;
+    if (k > 1) this.w.push(this.w[k - 2] * (1 - (this.order + 1) / (k - 1)));
+    let sum = 0;
+    for (let j = 0; j < k; j++) sum += this.w[j] * this.hist[k - 1 - j];
+    return sum / Math.pow(h, this.order);
+  }
+}
+
+/* ---- controller parameter defaults, pulled straight from the .m files ---- */
+const CL_DEFAULTS = {
+  pd: { kp: 16, kd: 1.0245 },
+  pdf: { kp: 16, kd: 1.0245, mu: 0.5308 },
+  s1sat: { c1: 15.0914, c2: 13.4548, b1: 1.2611, b2: 0.8909, k: 21.9999, gamma: 0.5508, Mb: 1.999e-4, ks: 641.6, epsilon: 10, kp: 16, kd: 1.0245 },
+  s1dhrl: { c1: 15.0914, c2: 13.4548, b1: 1.2611, b2: 0.8909, k: 21.9999, gamma: 0.5508, Mb: 1.999e-4, a: 10, b: 60, k3: 22.5, k4: 7.5, q: 3, kp: 16, kd: 1.0245 },
+  s2: { k1: 15.0914, k2: 13.5948, b11: 0.9909, b22: 0.5998, alpha1: 0.5998, alpha2: 0.9989, Mb: 1.999e-4, ks: 641.6, epsilon: 10, kp: 16, kd: 1.0245 },
+};
+const CL_LABELS = {
+  c1: 'c1', c2: 'c2', b1: 'b1', b2: 'b2', k: 'k', gamma: 'γ (order)', Mb: 'Mb', ks: 'ks', epsilon: 'ε (sat)',
+  kp: 'kp (PD)', kd: 'kd (PD)', mu: 'μ (order)', a: 'a', b: 'b', k3: 'k3', k4: 'k4', q: 'q1=q2=q3',
+  k1: 'k1', k2: 'k2', b11: 'b11', b22: 'b22', alpha1: 'α1 (order)', alpha2: 'α2 (order)',
+};
+let clController = 'pd';
+let clParams = { ...CL_DEFAULTS.pd };
+
+function buildCLParamFields() {
+  const container = document.getElementById('cl-params');
+  container.innerHTML = '';
+  for (const key of Object.keys(clParams)) {
+    const field = document.createElement('div');
+    field.className = 'field';
+    const label = document.createElement('label');
+    label.textContent = CL_LABELS[key] || key;
+    const input = document.createElement('input');
+    input.type = 'number'; input.step = 'any'; input.value = clParams[key];
+    input.addEventListener('change', () => { clParams[key] = parseFloat(input.value); });
+    field.appendChild(label); field.appendChild(input);
+    container.appendChild(field);
+  }
+}
+buildCLParamFields();
+
+document.getElementById('cl-controller-chips').addEventListener('click', (e) => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  document.querySelectorAll('#cl-controller-chips .chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  clController = chip.dataset.ctrl;
+  clParams = { ...CL_DEFAULTS[clController] };
+  buildCLParamFields();
+});
+
+function useGeometryPreset(preset) {
+  if (preset === 'pfe') {
+    P.Rf = CL.r * 1000; P.Re = 0; P.L = CL.l1 * 1000; P.l = CL.l2 * 1000;
+    PHI_DEG = [0, 120, 240];
+  } else {
+    P.Rf = P_ASSEMBLY1.Rf; P.Re = P_ASSEMBLY1.Re; P.L = P_ASSEMBLY1.L; P.l = P_ASSEMBLY1.l;
+    PHI_DEG = [...PHI_DEG_ASSEMBLY1];
+  }
+  document.getElementById('p-Rf').value = P.Rf;
+  document.getElementById('p-Re').value = P.Re;
+  document.getElementById('p-L').value = P.L;
+  document.getElementById('p-l').value = P.l;
+  sliderInputs.forEach(s => { s.input.min = -180; s.input.max = 180; });
+  rebuildBase();
+  buildDynamic();
+  camDist = preset === 'pfe' ? 1300 : 480;
+  camTheta = 0.9; camPhi = 1.05;
+  controlsTarget.set(0, preset === 'pfe' ? -430 : -140, 0);
+  updateCameraFromSpherical();
+}
+
+function simulateController(ctrlName, prm, trajParams) {
+  const { A, B, p: p_traj, tf, h, trajType, payload } = trajParams;
+  const N = Math.ceil(tf / h);
+  const trajFn = CL_TRAJECTORIES[trajType || 'ellipse_pfe'];
+  const tp = { A, B, p: p_traj, tf };
+
+  const P0 = trajFn(0, tp).P;
+  let alpha = CL.MGI(P0);
+  let dalpha = [0, 0, 0];
+
+  let qrefPrev = alpha.slice(), dqrefPrev = [0, 0, 0];
+  let ePrev = [0, 0, 0];
+  let ddqPrev = [0, 0, 0];
+  let uPrev = [0, 0, 0];
+
+  let glA = [], glB = [], glC = [], glD = [];
+  if (ctrlName === 's1sat' || ctrlName === 's1dhrl') {
+    glA = [0, 1, 2].map(() => new GLFrac(prm.gamma));
+    glB = [0, 1, 2].map(() => new GLFrac(prm.gamma + 1));
+  } else if (ctrlName === 's2') {
+    glA = [0, 1, 2].map(() => new GLFrac(prm.alpha1));
+    glB = [0, 1, 2].map(() => new GLFrac(prm.alpha2 - 1));
+    glC = [0, 1, 2].map(() => new GLFrac(prm.alpha1 + 1));
+    glD = [0, 1, 2].map(() => new GLFrac(prm.alpha2));
+  } else if (ctrlName === 'pdf') {
+    glA = [0, 1, 2].map(() => new GLFrac(prm.mu));
+  }
+
+  const log = { time: [], a1: [], a2: [], a3: [], q1: [], q2: [], q3: [], err: [], refX: [], refY: [], refZ: [] };
+
+  for (let k = 0; k <= N; k++) {
+    const t = k * h;
+    const traj = trajFn(t, tp);
+    const qref = CL.MGI(traj.P);
+    const dqref = qref.map((v, i) => (v - qrefPrev[i]) / h);
+    const ddqref = dqref.map((v, i) => (v - dqrefPrev[i]) / h);
+    qrefPrev = qref; dqrefPrev = dqref;
+
+    const e = alpha.map((a, i) => qref[i] - a);
+    const de = e.map((v, i) => (v - ePrev[i]) / h);
+    ePrev = e;
+
+    const T = [0, 0, 0];
+    for (let i = 0; i < 3; i++) {
+      let u;
+      const kp = prm.kp !== undefined ? prm.kp : CL_DEFAULTS.pd.kp;
+      const kd = prm.kd !== undefined ? prm.kd : CL_DEFAULTS.pd.kd;
+
+      if (ctrlName === 'pd') { T[i] = kp * e[i] + kd * de[i]; continue; }
+      if (ctrlName === 'pdf') { const dmu = glA[i].push(e[i], h); T[i] = kp * e[i] + kd * dmu; continue; }
+
+      u = kp * e[i] + kd * de[i];
+      let TDCterm;
+      if (ctrlName === 's1sat' || ctrlName === 's1dhrl') {
+        const { c1, c2, b1, b2, k } = prm;
+        const combo = c1 * e[i] + c2 * Math.pow(Math.abs(e[i]), b2) * Math.sign(e[i]);
+        const fracA = glA[i].push(combo, h);
+        const fracB = glB[i].push(combo, h);
+        const S = de[i] + fracA + k * Math.pow(Math.abs(e[i]), b1) * Math.sign(e[i]);
+        const term2 = k * b1 * Math.pow(Math.abs(e[i]), b1 - 1) * de[i];
+        let reach;
+        if (ctrlName === 's1sat') reach = prm.ks * CL.saturation(S, prm.epsilon);
+        else reach = prm.k3 * Math.tanh(prm.a * S) + prm.k4 * Math.abs(S) * Math.asinh(prm.b * Math.pow(S, prm.q));
+        TDCterm = prm.Mb * (term2 + fracB + ddqref[i] + reach);
+      } else {
+        const { k1, k2, b11, b22, alpha1, alpha2 } = prm;
+        const comboA = Math.pow(Math.abs(e[i]), b11) * Math.sign(e[i]);
+        const comboB = Math.pow(Math.abs(e[i]), b22) * Math.sign(e[i]);
+        const fA = glA[i].push(comboA, h);
+        const fB = glB[i].push(comboB, h);
+        const fC = glC[i].push(comboA, h);
+        const fD = glD[i].push(comboB, h);
+        const S = de[i] + k1 * fA + k2 * fB;
+        const reach = prm.ks * CL.saturation(S, prm.epsilon);
+        TDCterm = prm.Mb * (k1 * fC + k2 * fD + ddqref[i] + reach);
+      }
+      T[i] = TDCterm - prm.Mb * ddqPrev[i] + uPrev[i];
+      uPrev[i] = u;
+    }
+
+    log.time.push(t); log.a1.push(alpha[0] * 180 / Math.PI); log.a2.push(alpha[1] * 180 / Math.PI); log.a3.push(alpha[2] * 180 / Math.PI);
+    log.q1.push(qref[0] * 180 / Math.PI); log.q2.push(qref[1] * 180 / Math.PI); log.q3.push(qref[2] * 180 / Math.PI);
+    log.refX.push(traj.P[0] * 1000); log.refY.push(traj.P[1] * 1000); log.refZ.push(traj.P[2] * 1000);
+    log.err.push(Math.hypot(e[0], e[1], e[2]) * 180 / Math.PI);
+
+    const ddalpha = CL.MDD(alpha, dalpha, T, traj.P, traj.dP, payload || 0);
+    ddqPrev = ddalpha;
+    dalpha = dalpha.map((v, i) => v + ddalpha[i] * h);
+    alpha = alpha.map((v, i) => v + dalpha[i] * h);
+    if (alpha.some(v => Number.isNaN(v))) { log.diverged = true; log.divergedAt = t; log.payload = payload || 0; return log; }
+  }
+  log.diverged = false;
+  log.payload = payload || 0;
+  log.rms = Math.sqrt(log.err.reduce((s, v) => s + v * v, 0) / log.err.length);
+  log.max = Math.max(...log.err);
+  log.final = log.err[log.err.length - 1];
+  return log;
+}
+
+let clTrajectory = 'ellipse_pfe';
+
+function readTrajParams() {
+  return {
+    A: parseFloat(document.getElementById('cl-A').value) || 0.25,
+    B: parseFloat(document.getElementById('cl-B').value) || 0.06,
+    p: parseFloat(document.getElementById('cl-p').value) || 1,
+    tf: parseFloat(document.getElementById('cl-tf').value) || 0.5,
+    h: parseFloat(document.getElementById('cl-h').value) || 0.001,
+    trajType: clTrajectory,
+    payload: parseFloat(document.getElementById('cl-payload').value) || 0,
+  };
+}
+
+const CL_TRAJ_FIELD_LABELS = {
+  ellipse_pfe: ['A (m)', 'B (m)', 'p (period scale)'],
+  circle: ['R (m)', 'B — unused', 'cycles'],
+  figure8: ['R (m)', 'B — unused', 'cycles'],
+  spiral: ['max R (m)', 'B — unused', 'cycles'],
+  helix: ['R (m)', 'Z amplitude (m)', 'cycles'],
+  square: ['half‑side (m)', 'B — unused', 'cycles'],
+  rose: ['R (m)', 'B — unused', 'cycles'],
+};
+function updateCLTrajFieldLabels() {
+  const labels = CL_TRAJ_FIELD_LABELS[clTrajectory];
+  const fields = document.querySelectorAll('#cl-traj-params .field label');
+  fields.forEach((el, i) => { if (labels[i]) el.textContent = labels[i]; });
+}
+document.getElementById('cl-traj-chips').addEventListener('click', (e) => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  document.querySelectorAll('#cl-traj-chips .chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  clTrajectory = chip.dataset.traj;
+  updateCLTrajFieldLabels();
+});
+updateCLTrajFieldLabels();
+
+let clRefLine = null, clActualLine = null;
+function clearCLPathLines() {
+  if (clRefLine) { dynGroup.remove(clRefLine); clRefLine.geometry.dispose(); clRefLine = null; }
+  if (clActualLine) { dynGroup.remove(clActualLine); clActualLine.geometry.dispose(); clActualLine = null; }
+}
+function buildControlLabPathLines(log) {
+  clearCLPathLines();
+  if (!log.refX) return; // older log without path data
+  const N = log.time.length;
+  const step = Math.max(1, Math.floor(N / 250));
+
+  const refPts = [];
+  for (let i = 0; i < N; i += step) refPts.push(worldFromMM({ x: log.refX[i], y: log.refY[i], z: log.refZ[i] }));
+  const refGeo = new THREE.BufferGeometry().setFromPoints(refPts);
+  const refMat = new THREE.LineDashedMaterial({ color: 0xd9720f, dashSize: 8, gapSize: 5, transparent: true, opacity: 0.9 });
+  clRefLine = new THREE.Line(refGeo, refMat);
+  clRefLine.computeLineDistances();
+  dynGroup.add(clRefLine);
+
+  const actPts = [];
+  for (let i = 0; i < N; i += step) {
+    const p = solveFK([-log.a1[i], -log.a2[i], -log.a3[i]]); // sign-flip: PFE alpha -> our convention
+    if (p) actPts.push(worldFromMM(p));
+  }
+  const actGeo = new THREE.BufferGeometry().setFromPoints(actPts);
+  const actMat = new THREE.LineBasicMaterial({ color: 0x0f948a, transparent: true, opacity: 0.9 });
+  clActualLine = new THREE.Line(actGeo, actMat);
+  dynGroup.add(clActualLine);
+}
+
+function loadLogIntoPlayer(log, infoPrefix) {
+  useGeometryPreset('pfe');
+  buildTrajectoryLine(null); // clear any manual-trajectory path line
+  buildControlLabPathLines(log);
+  setPayloadVisual(log.payload || 0);
+  simulinkData = {
+    time: log.time,
+    c1: log.a1.map(v => -v), c2: log.a2.map(v => -v), c3: log.a3.map(v => -v),
+    mode: 'angles', n: log.time.length, duration: log.time[log.time.length - 1] - log.time[0],
+  };
+  simulinkMode = 'angles';
+  simulinkT = 0;
+  const payloadNote = (log.payload > 0) ? \` · payload \${log.payload.toFixed(2)}kg (shown on end‑effector)\` : '';
+  document.getElementById('simulink-info').innerHTML =
+    \`\${infoPrefix} — \${simulinkData.n} samples, \${simulinkData.duration.toFixed(2)}s\${payloadNote}<br>\` +
+    \`<span style="color:#d9720f">┄┄</span> reference path &nbsp; <span style="color:#0f948a">──</span> actual path (controller)\`;
+  document.getElementById('simulink-controls').style.display = 'block';
+  document.querySelectorAll('#simulink-mode-chips .chip').forEach(c => c.classList.toggle('active', c.dataset.mode === 'angles'));
+  document.getElementById('simulink-scrub').value = 0;
+  document.getElementById('simulink-time').textContent = \`0.00 / \${simulinkData.duration.toFixed(2)} s\`;
+  applySimulinkAt(simulinkData.time[0]);
+
+  // auto-play immediately — "Run Simulation" should show the robot moving, not leave it frozen
+  stopTrajectory();
+  simulinkPlaying = true;
+  document.getElementById('btn-simulink-play').classList.add('active');
+  document.getElementById('cl-playback-quick').style.display = 'flex';
+  document.getElementById('btn-cl-pause').textContent = '⏸ Pause';
+}
+
+function drawAngleChart(log) {
+  const W = 560, H = 220, padL = 34, padR = 10, padT = 10, padB = 24;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const tf = log.time[log.time.length - 1];
+  const allVals = [...log.a1, ...log.a2, ...log.a3, ...log.q1, ...log.q2, ...log.q3];
+  const lo = Math.min(...allVals), hi = Math.max(...allVals);
+  const pad = (hi - lo) * 0.1 || 1;
+  const yMin = lo - pad, yMax = hi + pad;
+
+  const xAt = (t) => padL + (t / tf) * plotW;
+  const yAt = (v) => padT + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+
+  let svg = \`<svg viewBox="0 0 \${W} \${H}" xmlns="http://www.w3.org/2000/svg">\`;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (plotH / 4) * i;
+    const val = yMax - (yMax - yMin) * (i / 4);
+    svg += \`<line x1="\${padL}" y1="\${y}" x2="\${W - padR}" y2="\${y}" stroke="#d7dbe3" stroke-width="1"/>\`;
+    svg += \`<text x="\${padL - 5}" y="\${y + 3}" text-anchor="end" font-size="8" font-family="JetBrains Mono, monospace" fill="#8a93a3">\${val.toFixed(0)}°</text>\`;
+  }
+  for (let i = 0; i <= 4; i++) {
+    const x = padL + (plotW / 4) * i;
+    svg += \`<text x="\${x}" y="\${H - 6}" text-anchor="middle" font-size="8" font-family="JetBrains Mono, monospace" fill="#8a93a3">\${(tf * i / 4).toFixed(2)}s</text>\`;
+  }
+  svg += \`<line x1="\${padL}" y1="\${padT}" x2="\${padL}" y2="\${padT + plotH}" stroke="#d7dbe3" stroke-width="1"/>\`;
+  svg += \`<line x1="\${padL}" y1="\${padT + plotH}" x2="\${W - padR}" y2="\${padT + plotH}" stroke="#d7dbe3" stroke-width="1"/>\`;
+
+  const step = Math.max(1, Math.floor(log.time.length / 400));
+  function pathFor(arr) {
+    let d = '';
+    for (let i = 0; i < log.time.length; i += step) d += (i === 0 ? 'M' : 'L') + xAt(log.time[i]).toFixed(2) + ',' + yAt(arr[i]).toFixed(2) + ' ';
+    return d;
+  }
+  const arms = [['a1', 'q1', 'var(--arm1)', '#d9720f'], ['a2', 'q2', 'var(--arm2)', '#0f948a'], ['a3', 'q3', 'var(--arm3)', '#7b52c9']];
+  for (const [actKey, refKey, , hex] of arms) {
+    svg += \`<path d="\${pathFor(log[refKey])}" fill="none" stroke="\${hex}" stroke-width="1.3" stroke-dasharray="4,3" opacity="0.55"/>\`;
+  }
+  for (const [actKey, refKey, , hex] of arms) {
+    svg += \`<path d="\${pathFor(log[actKey])}" fill="none" stroke="\${hex}" stroke-width="1.6" opacity="0.95"/>\`;
+  }
+  svg += \`</svg>\`;
+
+  const legend = \`<div class="cl-legend">
+    <div class="cl-legend-item"><span class="cl-legend-dot" style="background:#d9720f"></span>θ₁ actual</div>
+    <div class="cl-legend-item"><span class="cl-legend-dot" style="background:#0f948a"></span>θ₂ actual</div>
+    <div class="cl-legend-item"><span class="cl-legend-dot" style="background:#7b52c9"></span>θ₃ actual</div>
+    <div class="cl-legend-item">┄┄ dashed = reference (qref)</div>
+  </div>\`;
+  document.getElementById('cl-angle-chart-wrap').innerHTML = svg + legend;
+  document.getElementById('cl-angle-chart-wrap').style.display = 'block';
+}
+
+function runControlLabSimulation() {
+  const statusEl = document.getElementById('cl-status');
+  statusEl.textContent = 'running…';
+  document.getElementById('cl-angle-chart-wrap').style.display = 'none';
+  const t0 = performance.now();
+  const trajParams = readTrajParams();
+  const log = simulateController(clController, clParams, trajParams);
+
+  if (log.diverged) {
+    statusEl.textContent = \`⚠ simulation diverged (NaN) at t=\${log.divergedAt.toFixed(3)}s — try smaller h or gentler gains\`;
+    return;
+  }
+  const elapsed = (performance.now() - t0).toFixed(0);
+  loadLogIntoPlayer(log, \`\${CL_TRAJ_NAMES[trajParams.trajType]} (\${CL_CTRL_NAMES[clController]}) result loaded\`);
+  drawAngleChart(log);
+  const payloadNote = trajParams.payload > 0 ? \` · payload \${trajParams.payload}kg\` : '';
+  statusEl.innerHTML = \`done in \${elapsed}ms · \${CL_TRAJ_NAMES[trajParams.trajType]}\${payloadNote} · RMS tracking error ≈ <span style="color:var(--cyan)">\${log.rms.toFixed(3)}°</span> · loaded into Simulink Import player below — hit Play.\`;
+}
+
+document.getElementById('btn-cl-run').addEventListener('click', runControlLabSimulation);
+
+document.getElementById('btn-cl-pause').addEventListener('click', (e) => {
+  if (simulinkPlaying) {
+    simulinkPlaying = false;
+    document.getElementById('btn-simulink-play').classList.remove('active');
+    e.target.textContent = '▶ Resume';
+  } else if (simulinkData) {
+    stopTrajectory();
+    simulinkPlaying = true;
+    document.getElementById('btn-simulink-play').classList.add('active');
+    e.target.textContent = '⏸ Pause';
+  }
+});
+document.getElementById('btn-cl-restart').addEventListener('click', () => {
+  if (!simulinkData) return;
+  simulinkT = 0;
+  applySimulinkAt(simulinkData.time[0]);
+  document.getElementById('simulink-scrub').value = 0;
+  document.getElementById('simulink-time').textContent = \`0.00 / \${simulinkData.duration.toFixed(2)} s\`;
+  stopTrajectory();
+  simulinkPlaying = true;
+  document.getElementById('btn-simulink-play').classList.add('active');
+  document.getElementById('btn-cl-pause').textContent = '⏸ Pause';
+});
+document.getElementById('cl-payload').addEventListener('input', (e) => {
+  if (usingPFEGeometryForPreview()) setPayloadVisual(parseFloat(e.target.value) || 0);
+});
+function usingPFEGeometryForPreview() {
+  return Math.abs(P.Rf - CL.r * 1000) < 1; // true once we're showing the PFE robot (Control Lab or its Ellipse trajectory)
+}
+
+/* ---------------- COMPARE ALL 5 CONTROLLERS ---------------- */
+
+const CL_CTRL_NAMES = { pd: 'PD classique', pdf: 'PD fractionnaire', s1sat: 'TDC+S1 (sat)', s1dhrl: 'TDC+S1 (DHRL)', s2: 'TDC+S2' };
+const CL_CTRL_COLORS = { pd: '#d9720f', pdf: '#0f948a', s1sat: '#7b52c9', s1dhrl: '#d43d3d', s2: '#1f9d63' };
+
+function drawErrorChart(results, tf, names, colors) {
+  const W = 560, H = 220, padL = 38, padR = 10, padT = 10, padB = 24;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  let maxErr = 0;
+  for (const r of results) if (!r.log.diverged) maxErr = Math.max(maxErr, r.log.max);
+  maxErr = maxErr > 0 ? maxErr * 1.1 : 1;
+
+  const xAt = (t) => padL + (t / tf) * plotW;
+  const yAt = (e) => padT + plotH - (e / maxErr) * plotH;
+
+  let svg = \`<svg viewBox="0 0 \${W} \${H}" xmlns="http://www.w3.org/2000/svg">\`;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (plotH / 4) * i;
+    const val = maxErr * (1 - i / 4);
+    svg += \`<line x1="\${padL}" y1="\${y}" x2="\${W - padR}" y2="\${y}" stroke="#d7dbe3" stroke-width="1"/>\`;
+    svg += \`<text x="\${padL - 5}" y="\${y + 3}" text-anchor="end" font-size="8" font-family="JetBrains Mono, monospace" fill="#8a93a3">\${val.toFixed(1)}°</text>\`;
+  }
+  for (let i = 0; i <= 4; i++) {
+    const x = padL + (plotW / 4) * i;
+    const val = tf * (i / 4);
+    svg += \`<text x="\${x}" y="\${H - 6}" text-anchor="middle" font-size="8" font-family="JetBrains Mono, monospace" fill="#8a93a3">\${val.toFixed(2)}s</text>\`;
+  }
+  svg += \`<line x1="\${padL}" y1="\${padT}" x2="\${padL}" y2="\${padT + plotH}" stroke="#d7dbe3" stroke-width="1"/>\`;
+  svg += \`<line x1="\${padL}" y1="\${padT + plotH}" x2="\${W - padR}" y2="\${padT + plotH}" stroke="#d7dbe3" stroke-width="1"/>\`;
+
+  for (const r of results) {
+    if (r.log.diverged) continue;
+    const { time, err } = r.log;
+    const step = Math.max(1, Math.floor(time.length / 300));
+    let d = '';
+    for (let i = 0; i < time.length; i += step) {
+      const x = xAt(time[i]), y = yAt(err[i]);
+      d += (i === 0 ? 'M' : 'L') + x.toFixed(2) + ',' + y.toFixed(2) + ' ';
+    }
+    svg += \`<path d="\${d}" fill="none" stroke="\${colors[r.name]}" stroke-width="1.6" opacity="0.9"/>\`;
+  }
+  svg += \`</svg>\`;
+
+  let legend = '<div class="cl-legend">';
+  for (const r of results) {
+    legend += \`<div class="cl-legend-item"><span class="cl-legend-dot" style="background:\${colors[r.name]}"></span>\${names[r.name]}\${r.log.diverged ? ' (diverged)' : ''}</div>\`;
+  }
+  legend += '</div>';
+
+  document.getElementById('cl-chart-wrap').innerHTML = svg + legend;
+}
+
+function buildCompareTable(results, names, colors, columnLabel, onRowClick) {
+  const ok = results.filter(r => !r.log.diverged).sort((a, b) => a.log.rms - b.log.rms);
+  const bad = results.filter(r => r.log.diverged);
+  let html = \`<thead><tr><th>\${columnLabel}</th><th>RMS err</th><th>Max err</th><th>Final err</th></tr></thead><tbody>\`;
+  ok.forEach((r, idx) => {
+    html += \`<tr data-key="\${r.name}" class="\${idx === 0 ? 'best' : ''}">\` +
+      \`<td class="ctrl-name"><span class="rank-dot" style="background:\${colors[r.name]}"></span>\${names[r.name]}</td>\` +
+      \`<td>\${r.log.rms.toFixed(3)}°</td><td>\${r.log.max.toFixed(3)}°</td><td>\${r.log.final.toFixed(3)}°</td></tr>\`;
+  });
+  bad.forEach(r => {
+    html += \`<tr><td class="ctrl-name">\${names[r.name]}</td><td colspan="3" style="color:var(--red)">diverged at t=\${r.log.divergedAt.toFixed(3)}s</td></tr>\`;
+  });
+  html += '</tbody>';
+  const table = document.getElementById('cl-table');
+  table.innerHTML = html;
+  table.querySelectorAll('tr[data-key]').forEach(row => {
+    row.addEventListener('click', () => {
+      const key = row.dataset.key;
+      const result = results.find(r => r.name === key);
+      if (!result || result.log.diverged) return;
+      onRowClick(key, result);
+    });
+  });
+}
+
+document.getElementById('btn-cl-compare').addEventListener('click', () => {
+  const statusEl = document.getElementById('cl-status');
+  statusEl.textContent = 'running all 5 controllers…';
+  const t0 = performance.now();
+  const trajParams = readTrajParams();
+
+  const results = Object.keys(CL_DEFAULTS).map(name => {
+    const prm = (name === clController) ? clParams : CL_DEFAULTS[name];
+    return { name, log: simulateController(name, prm, trajParams) };
+  });
+
+  const elapsed = (performance.now() - t0).toFixed(0);
+  document.getElementById('cl-compare-results').style.display = 'block';
+  drawErrorChart(results, trajParams.tf, CL_CTRL_NAMES, CL_CTRL_COLORS);
+  buildCompareTable(results, CL_CTRL_NAMES, CL_CTRL_COLORS, 'Controller', (name, result) => {
+    loadLogIntoPlayer(result.log, \`\${CL_CTRL_NAMES[name]} — loaded from comparison\`);
+    statusEl.innerHTML = \`showing <span style="color:var(--cyan)">\${CL_CTRL_NAMES[name]}</span> · RMS \${result.log.rms.toFixed(3)}° — hit Play below.\`;
+  });
+
+  const okCount = results.filter(r => !r.log.diverged).length;
+  const payloadNote = trajParams.payload > 0 ? \` · payload \${trajParams.payload}kg\` : '';
+  statusEl.textContent = \`compared 5 controllers on \${CL_TRAJ_NAMES[trajParams.trajType]}\${payloadNote} in \${elapsed}ms (\${okCount} stable) — click a row to load it.\`;
+});
+
+document.getElementById('btn-cl-compare-traj').addEventListener('click', () => {
+  const statusEl = document.getElementById('cl-status');
+  statusEl.textContent = \`running \${CL_CTRL_NAMES[clController]} on all 7 trajectories…\`;
+  const t0 = performance.now();
+  const baseTrajParams = readTrajParams();
+
+  const results = Object.keys(CL_TRAJ_NAMES).map(trajType => {
+    const trajParams = { ...baseTrajParams, trajType };
+    return { name: trajType, log: simulateController(clController, clParams, trajParams) };
+  });
+
+  const elapsed = (performance.now() - t0).toFixed(0);
+  document.getElementById('cl-compare-results').style.display = 'block';
+  drawErrorChart(results, baseTrajParams.tf, CL_TRAJ_NAMES, CL_TRAJ_COLORS);
+  buildCompareTable(results, CL_TRAJ_NAMES, CL_TRAJ_COLORS, 'Trajectory', (trajType, result) => {
+    loadLogIntoPlayer(result.log, \`\${CL_TRAJ_NAMES[trajType]} (\${CL_CTRL_NAMES[clController]}) — loaded from comparison\`);
+    statusEl.innerHTML = \`showing <span style="color:var(--cyan)">\${CL_TRAJ_NAMES[trajType]}</span> · RMS \${result.log.rms.toFixed(3)}° — hit Play below.\`;
+  });
+
+  const okCount = results.filter(r => !r.log.diverged).length;
+  const best = results.filter(r => !r.log.diverged).sort((a, b) => a.log.rms - b.log.rms)[0];
+  statusEl.textContent = \`\${CL_CTRL_NAMES[clController]} compared across 7 trajectories in \${elapsed}ms (\${okCount} stable)\` +
+    (best ? \` — best fit: \${CL_TRAJ_NAMES[best.name]} (RMS \${best.log.rms.toFixed(3)}°)\` : '');
+});
+
+document.getElementById('btn-cl-grid').addEventListener('click', () => {
+  const statusEl = document.getElementById('cl-status');
+  statusEl.textContent = 'running full 5×7 grid…';
+  document.getElementById('cl-compare-results').style.display = 'none';
+  const t0 = performance.now();
+  const baseTrajParams = readTrajParams();
+
+  const ctrlKeys = Object.keys(CL_DEFAULTS);
+  const trajKeys = Object.keys(CL_TRAJ_NAMES);
+  const grid = {}; // grid[ctrl][traj] = log
+  for (const ctrl of ctrlKeys) {
+    const prm = (ctrl === clController) ? clParams : CL_DEFAULTS[ctrl];
+    grid[ctrl] = {};
+    for (const traj of trajKeys) {
+      const trajParams = { ...baseTrajParams, trajType: traj };
+      grid[ctrl][traj] = simulateController(ctrl, prm, trajParams);
+    }
+  }
+  const elapsed = (performance.now() - t0).toFixed(0);
+
+  // color scale: green (low error) -> amber -> red (high error / diverged)
+  let allRms = [];
+  for (const c of ctrlKeys) for (const tr of trajKeys) if (!grid[c][tr].diverged) allRms.push(grid[c][tr].rms);
+  const rmsMax = allRms.length ? Math.max(...allRms) : 1;
+  function cellColor(rms) {
+    const t = Math.min(rms / (rmsMax || 1), 1);
+    // green (#63e6a4) -> amber (#ffd08a) -> red (#ff8a8a)
+    const stops = [[99, 230, 164], [255, 208, 138], [255, 138, 138]];
+    const seg = t < 0.5 ? 0 : 1;
+    const f = t < 0.5 ? t / 0.5 : (t - 0.5) / 0.5;
+    const c0 = stops[seg], c1 = stops[seg + 1];
+    const r = Math.round(c0[0] + (c1[0] - c0[0]) * f), g = Math.round(c0[1] + (c1[1] - c0[1]) * f), b = Math.round(c0[2] + (c1[2] - c0[2]) * f);
+    return \`rgb(\${r},\${g},\${b})\`;
+  }
+
+  let html = '<thead><tr><th class="row-label">Controller \\\\ Trajectory</th>';
+  for (const tr of trajKeys) html += \`<th>\${CL_TRAJ_NAMES[tr]}</th>\`;
+  html += '</tr></thead><tbody>';
+  for (const ctrl of ctrlKeys) {
+    html += \`<tr><td class="row-label">\${CL_CTRL_NAMES[ctrl]}</td>\`;
+    for (const tr of trajKeys) {
+      const log = grid[ctrl][tr];
+      if (log.diverged) {
+        html += \`<td class="diverged" data-ctrl="\${ctrl}" data-traj="\${tr}">✕</td>\`;
+      } else {
+        html += \`<td style="background:\${cellColor(log.rms)}" data-ctrl="\${ctrl}" data-traj="\${tr}">\${log.rms.toFixed(2)}°</td>\`;
+      }
+    }
+    html += '</tr>';
+  }
+  html += '</tbody>';
+  const table = document.getElementById('cl-grid-table');
+  table.innerHTML = html;
+  table.querySelectorAll('td[data-ctrl]').forEach(cell => {
+    cell.addEventListener('click', () => {
+      const ctrl = cell.dataset.ctrl, tr = cell.dataset.traj;
+      const log = grid[ctrl][tr];
+      if (log.diverged) return;
+      loadLogIntoPlayer(log, \`\${CL_CTRL_NAMES[ctrl]} on \${CL_TRAJ_NAMES[tr]} — from grid\`);
+      statusEl.innerHTML = \`showing <span style="color:var(--cyan)">\${CL_CTRL_NAMES[ctrl]}</span> on <span style="color:var(--cyan)">\${CL_TRAJ_NAMES[tr]}</span> · RMS \${log.rms.toFixed(3)}° — hit Play below.\`;
+    });
+  });
+  document.getElementById('cl-grid-results').style.display = 'block';
+
+  let divergedCount = 0;
+  for (const c of ctrlKeys) for (const tr of trajKeys) if (grid[c][tr].diverged) divergedCount++;
+  statusEl.textContent = \`full grid done in \${elapsed}ms (\${ctrlKeys.length * trajKeys.length} runs, \${divergedCount} diverged) — click a cell to load it.\`;
+});
+
+document.getElementById('btn-cl-sweep').addEventListener('click', () => {
+  const statusEl = document.getElementById('cl-status');
+  const maxPayload = parseFloat(document.getElementById('cl-sweep-max').value) || 0.3;
+  const steps = Math.max(2, parseInt(document.getElementById('cl-sweep-steps').value) || 6);
+  statusEl.textContent = \`testing payload robustness (0 → \${maxPayload}kg, \${steps} steps)…\`;
+  const t0 = performance.now();
+  const baseTrajParams = readTrajParams();
+
+  const payloads = Array.from({ length: steps }, (_, i) => (maxPayload * i) / (steps - 1));
+  const ctrlKeys = Object.keys(CL_DEFAULTS);
+
+  // series[ctrl] = { payloads:[], rms:[], logs:[] }  (logs kept per payload so a row click can load the heaviest stable one)
+  const series = {};
+  for (const ctrl of ctrlKeys) {
+    const prm = (ctrl === clController) ? clParams : CL_DEFAULTS[ctrl];
+    series[ctrl] = { payloads: [], rms: [], logs: [], firstDivergeAt: null };
+    for (const payload of payloads) {
+      const trajParams = { ...baseTrajParams, payload };
+      const log = simulateController(ctrl, prm, trajParams);
+      series[ctrl].payloads.push(payload);
+      series[ctrl].logs.push(log);
+      if (log.diverged) {
+        series[ctrl].rms.push(null);
+        if (series[ctrl].firstDivergeAt === null) series[ctrl].firstDivergeAt = payload;
+      } else {
+        series[ctrl].rms.push(log.rms);
+      }
+    }
+  }
+  const elapsed = (performance.now() - t0).toFixed(0);
+
+  drawPayloadSweepChart(series, maxPayload);
+  buildPayloadSweepTable(series);
+  document.getElementById('cl-sweep-results').style.display = 'block';
+  statusEl.innerHTML = \`payload sweep done in \${elapsed}ms (\${ctrlKeys.length * steps} runs) on \${CL_TRAJ_NAMES[baseTrajParams.trajType]} — click a row below to load its heaviest stable run.\`;
+});
+
+function drawPayloadSweepChart(series, maxPayload) {
+  const W = 560, H = 220, padL = 38, padR = 10, padT = 10, padB = 24;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  let maxRms = 0;
+  for (const ctrl of Object.keys(series)) for (const v of series[ctrl].rms) if (v !== null) maxRms = Math.max(maxRms, v);
+  maxRms = maxRms > 0 ? maxRms * 1.1 : 1;
+
+  const xAt = (p) => padL + (p / (maxPayload || 1)) * plotW;
+  const yAt = (e) => padT + plotH - (e / maxRms) * plotH;
+
+  let svg = \`<svg viewBox="0 0 \${W} \${H}" xmlns="http://www.w3.org/2000/svg">\`;
+  for (let i = 0; i <= 4; i++) {
+    const y = padT + (plotH / 4) * i;
+    svg += \`<line x1="\${padL}" y1="\${y}" x2="\${W - padR}" y2="\${y}" stroke="#d7dbe3" stroke-width="1"/>\`;
+    svg += \`<text x="\${padL - 5}" y="\${y + 3}" text-anchor="end" font-size="8" font-family="JetBrains Mono, monospace" fill="#8a93a3">\${(maxRms * (1 - i / 4)).toFixed(1)}°</text>\`;
+  }
+  for (let i = 0; i <= 4; i++) {
+    const x = padL + (plotW / 4) * i;
+    svg += \`<text x="\${x}" y="\${H - 6}" text-anchor="middle" font-size="8" font-family="JetBrains Mono, monospace" fill="#8a93a3">\${(maxPayload * i / 4).toFixed(2)}kg</text>\`;
+  }
+  svg += \`<line x1="\${padL}" y1="\${padT}" x2="\${padL}" y2="\${padT + plotH}" stroke="#d7dbe3" stroke-width="1"/>\`;
+  svg += \`<line x1="\${padL}" y1="\${padT + plotH}" x2="\${W - padR}" y2="\${padT + plotH}" stroke="#d7dbe3" stroke-width="1"/>\`;
+
+  for (const ctrl of Object.keys(series)) {
+    const s = series[ctrl];
+    let d = '', started = false;
+    for (let i = 0; i < s.payloads.length; i++) {
+      if (s.rms[i] === null) break; // stop drawing at divergence
+      const x = xAt(s.payloads[i]), y = yAt(s.rms[i]);
+      d += (!started ? 'M' : 'L') + x.toFixed(2) + ',' + y.toFixed(2) + ' ';
+      started = true;
+    }
+    svg += \`<path d="\${d}" fill="none" stroke="\${CL_CTRL_COLORS[ctrl]}" stroke-width="1.8" opacity="0.9"/>\`;
+    // mark divergence point with an X
+    if (s.firstDivergeAt !== null) {
+      const x = xAt(s.firstDivergeAt), y = padT + 8;
+      svg += \`<text x="\${x}" y="\${y}" text-anchor="middle" font-size="10" fill="\${CL_CTRL_COLORS[ctrl]}">✕</text>\`;
+    }
+  }
+  svg += \`</svg>\`;
+
+  let legend = '<div class="cl-legend">';
+  for (const ctrl of Object.keys(series)) {
+    const s = series[ctrl];
+    const note = s.firstDivergeAt !== null ? \` (diverges at \${s.firstDivergeAt.toFixed(2)}kg)\` : '';
+    legend += \`<div class="cl-legend-item"><span class="cl-legend-dot" style="background:\${CL_CTRL_COLORS[ctrl]}"></span>\${CL_CTRL_NAMES[ctrl]}\${note}</div>\`;
+  }
+  legend += '</div>';
+  document.getElementById('cl-sweep-chart-wrap').innerHTML = svg + legend;
+}
+
+function buildPayloadSweepTable(series) {
+  const rows = Object.keys(series).map(ctrl => {
+    const s = series[ctrl];
+    let lastOkIdx = -1;
+    for (let i = 0; i < s.rms.length; i++) if (s.rms[i] !== null) lastOkIdx = i;
+    return {
+      ctrl,
+      maxStable: lastOkIdx >= 0 ? s.payloads[lastOkIdx] : 0,
+      rmsAtMax: lastOkIdx >= 0 ? s.rms[lastOkIdx] : null,
+      rmsAtZero: s.rms[0],
+      diverged: s.firstDivergeAt !== null,
+      logAtMax: lastOkIdx >= 0 ? s.logs[lastOkIdx] : null,
+    };
+  }).sort((a, b) => b.maxStable - a.maxStable || (a.rmsAtMax ?? 1e9) - (b.rmsAtMax ?? 1e9));
+
+  let html = '<thead><tr><th>Controller</th><th>RMS @ 0kg</th><th>Max stable payload</th><th>RMS @ max</th></tr></thead><tbody>';
+  rows.forEach((r, idx) => {
+    html += \`<tr data-ctrl="\${r.ctrl}" class="\${idx === 0 ? 'best' : ''}">\` +
+      \`<td class="ctrl-name"><span class="rank-dot" style="background:\${CL_CTRL_COLORS[r.ctrl]}"></span>\${CL_CTRL_NAMES[r.ctrl]}</td>\` +
+      \`<td>\${r.rmsAtZero !== null ? r.rmsAtZero.toFixed(3) + '°' : '—'}</td>\` +
+      \`<td>\${r.maxStable.toFixed(3)}kg\${r.diverged ? '' : ' (never diverged in range)'}</td>\` +
+      \`<td>\${r.rmsAtMax !== null ? r.rmsAtMax.toFixed(3) + '°' : '—'}</td></tr>\`;
+  });
+  html += '</tbody>';
+  const table = document.getElementById('cl-sweep-table');
+  table.innerHTML = html;
+  table.querySelectorAll('tr[data-ctrl]').forEach(row => {
+    row.addEventListener('click', () => {
+      const r = rows.find(x => x.ctrl === row.dataset.ctrl);
+      if (!r || !r.logAtMax) return;
+      loadLogIntoPlayer(r.logAtMax, \`\${CL_CTRL_NAMES[r.ctrl]} @ \${r.maxStable.toFixed(2)}kg payload — from sweep\`);
+      document.getElementById('cl-status').innerHTML = \`showing <span style="color:var(--cyan)">\${CL_CTRL_NAMES[r.ctrl]}</span> at its heaviest stable payload (\${r.maxStable.toFixed(2)}kg) · RMS \${r.rmsAtMax.toFixed(3)}° — hit Play below.\`;
+    });
+  });
+}
+
+
+document.getElementById('toggle-workspace').addEventListener('click', (e) => {
+  const el = e.currentTarget;
+  const on = !el.classList.contains('on');
+  el.classList.toggle('on', on);
+  el.querySelector('.ws-dot').textContent = on ? '●' : '◯';
+  if (on) buildWorkspace();
+  else if (workspacePoints) { dynGroup.remove(workspacePoints); workspacePoints.geometry.dispose(); workspacePoints = null; }
+});
+document.getElementById('toggle-axes').addEventListener('click', (e) => {
+  showAxes = !e.target.classList.contains('on');
+  e.target.classList.toggle('on', showAxes);
+  axesHelper.visible = showAxes;
+});
+
+/* manual jog — per-arm motor angle, new direct-control layer on top of FK */
+let jogStep = 2;
+document.getElementById('jog-step-chips').addEventListener('click', (e) => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  document.querySelectorAll('#jog-step-chips .chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+  jogStep = parseFloat(chip.dataset.step);
+});
+
+function jogArm(armIdx, dir) {
+  stopTrajectory();
+  const { input, val } = sliderInputs[armIdx];
+  let v = parseFloat(input.value) + dir * jogStep;
+  v = Math.min(Math.max(v, parseFloat(input.min)), parseFloat(input.max));
+  input.value = v;
+  val.textContent = v.toFixed(1) + '°';
+  onMotorSliderChange();
+}
+
+document.querySelectorAll('.jog-btn').forEach(btn => {
+  btn.addEventListener('click', () => jogArm(parseInt(btn.dataset.arm), parseInt(btn.dataset.dir)));
+});
+
+window.addEventListener('keydown', (e) => {
+  const tag = document.activeElement.tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return; // don't hijack typing in number fields
+  const map = { q: [0, 1], a: [0, -1], w: [1, 1], s: [1, -1], e: [2, 1], d: [2, -1] };
+  const k = e.key.toLowerCase();
+  if (map[k]) { e.preventDefault(); jogArm(...map[k]); }
+});
+
+/* ---------------- APPEARANCE / COLOR CUSTOMIZATION ---------------- */
+
+const DEFAULT_COLORS = { bg: '#f4f5f7', accent: '#d9720f', arm1: '#d9720f', arm2: '#0f948a', arm3: '#7b52c9', base: '#b4bac4' };
+
+function setArmColor(idx, hex) {
+  ARM_COLORS[idx] = parseInt(hex.replace('#', '0x'));
+  armMats[idx].color.set(hex);
+  document.documentElement.style.setProperty('--arm' + (idx + 1), hex);
+}
+function setBgColor(hex) {
+  scene.background.set(hex);
+  scene.fog.color.set(hex);
+}
+function setAccentColor(hex) {
+  document.documentElement.style.setProperty('--amber', hex);
+}
+function setBaseColor(hex) {
+  metalMat.color.set(hex);
+}
+
+['bg', 'accent', 'arm1', 'arm2', 'arm3', 'base'].forEach(key => {
+  document.getElementById('color-' + key).addEventListener('input', (e) => {
+    const hex = e.target.value;
+    if (key === 'bg') setBgColor(hex);
+    else if (key === 'accent') setAccentColor(hex);
+    else if (key === 'base') setBaseColor(hex);
+    else setArmColor(['arm1', 'arm2', 'arm3'].indexOf(key), hex);
+  });
+});
+
+document.getElementById('btn-color-reset').addEventListener('click', () => {
+  Object.entries(DEFAULT_COLORS).forEach(([key, hex]) => {
+    document.getElementById('color-' + key).value = hex;
+    if (key === 'bg') setBgColor(hex);
+    else if (key === 'accent') setAccentColor(hex);
+    else if (key === 'base') setBaseColor(hex);
+    else setArmColor(['arm1', 'arm2', 'arm3'].indexOf(key), hex);
+  });
+});
+
+/* ---------------- COMMAND CONSOLE ---------------- */
+
+const consoleLog = document.getElementById('console-log');
+const consoleInput = document.getElementById('console-input');
+
+function logLine(text, cls) {
+  const div = document.createElement('div');
+  div.className = cls;
+  div.textContent = text;
+  consoleLog.appendChild(div);
+  consoleLog.scrollTop = consoleLog.scrollHeight;
+}
+
+const HELP_TEXT = [
+  'goto x y z          — solve IK for a target (mm)',
+  'jog 1|2|3 deg        — nudge that arm\\'s motor angle',
+  'set Rf|L|l|Re value  — change a geometry parameter',
+  'play <name>          — circle · figure8 · spiral · helix · square · rose',
+  'stop                 — stop the running trajectory',
+  'home                 — return to home pose',
+  'color arm1|arm2|arm3|bg|accent|base #hex',
+  'wire                 — toggle wireframe',
+  'view                 — reset camera',
+];
+
+function runCommand(raw) {
+  const line = raw.trim();
+  if (!line) return;
+  logLine(line, 'cl-in');
+  const parts = line.split(/\\s+/);
+  const cmd = parts[0].toLowerCase();
+  try {
+    switch (cmd) {
+      case 'help':
+        HELP_TEXT.forEach(l => logLine(l, 'cl-out'));
+        break;
+      case 'goto': {
+        const [x, y, z] = parts.slice(1).map(Number);
+        if ([x, y, z].some(Number.isNaN)) throw new Error('usage: goto x y z');
+        document.getElementById('ik-x').value = x;
+        document.getElementById('ik-y').value = y;
+        document.getElementById('ik-z').value = z;
+        const ok = goToTarget({ x, y, z });
+        logLine(ok ? \`→ target reached (\${x}, \${y}, \${z})\` : '⚠ target unreachable', ok ? 'cl-out' : 'cl-err');
+        break;
+      }
+      case 'jog': {
+        const idx = parseInt(parts[1]) - 1;
+        const deg = parseFloat(parts[2]);
+        if (![0, 1, 2].includes(idx) || Number.isNaN(deg)) throw new Error('usage: jog 1|2|3 deg');
+        jogArm(idx, Math.sign(deg) || 1);
+        logLine(\`→ arm \${idx + 1} jogged\`, 'cl-out');
+        break;
+      }
+      case 'set': {
+        const key = { Rf: 'p-Rf', L: 'p-L', l: 'p-l', Re: 'p-Re' }[parts[1]];
+        const val = parseFloat(parts[2]);
+        if (!key || Number.isNaN(val)) throw new Error('usage: set Rf|L|l|Re value');
+        const el = document.getElementById(key);
+        el.value = val;
+        el.dispatchEvent(new Event('change'));
+        logLine(\`→ \${parts[1]} = \${val}mm\`, 'cl-out');
+        break;
+      }
+      case 'play': {
+        const name = parts[1];
+        const chip = document.querySelector(\`.chip[data-traj="\${name}"]\`);
+        if (!chip) throw new Error('unknown path — try: circle, figure8, spiral, helix, square, rose');
+        chip.click();
+        document.getElementById('btn-play').click();
+        logLine(\`→ playing \${name}\`, 'cl-out');
+        break;
+      }
+      case 'stop':
+        stopTrajectory();
+        logLine('→ stopped', 'cl-out');
+        break;
+      case 'home':
+        document.getElementById('btn-home').click();
+        logLine('→ home', 'cl-out');
+        break;
+      case 'color': {
+        const target = parts[1], hex = parts[2];
+        if (!/^#[0-9a-f]{6}$/i.test(hex || '')) throw new Error('usage: color arm1|arm2|arm3|bg|accent|base #rrggbb');
+        const input = document.getElementById('color-' + target);
+        if (!input) throw new Error('unknown target — try: arm1, arm2, arm3, bg, accent, base');
+        input.value = hex;
+        input.dispatchEvent(new Event('input'));
+        logLine(\`→ \${target} set to \${hex}\`, 'cl-out');
+        break;
+      }
+      case 'wire':
+        document.getElementById('btn-wire').click();
+        logLine('→ wireframe toggled', 'cl-out');
+        break;
+      case 'view':
+        document.getElementById('btn-view').click();
+        logLine('→ view reset', 'cl-out');
+        break;
+      default:
+        throw new Error(\`unknown command "\${cmd}" — type "help"\`);
+    }
+  } catch (err) {
+    logLine('⚠ ' + err.message, 'cl-err');
+  }
+}
+
+consoleInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    runCommand(consoleInput.value);
+    consoleInput.value = '';
+  }
+});
+logLine('type "help" for a list of commands', 'cl-out');
+
+/* ---------------- RENDER LOOP ---------------- */
+
+let lastT = performance.now();
+const CYCLE_SECONDS = 6;
+
+function animate() {
+  requestAnimationFrame(animate);
+  const now = performance.now();
+  const dt = (now - lastT) / 1000;
+  lastT = now;
+
+  if (currentTrajectory) {
+    try {
+      currentTrajectory.t += dt * trajSpeed / CYCLE_SECONDS;
+      currentTrajectory.t %= 1;
+      const fn = TRAJECTORIES[currentTrajectory.name];
+      const target = fn(currentTrajectory.t, TRAJ_RADIUS, TRAJ_Z);
+      const r = solveIK(target);
+      if (r.ok) {
+        updatePose(target, r);
+        setSlidersFromTheta(r.theta);
+        setReadout(target, true);
+      }
+    } catch (err) {
+      console.error('trajectory update failed:', err);
+      stopTrajectory();
+    }
+  }
+
+  if (simulinkPlaying && simulinkData) {
+    try {
+      simulinkT += dt * simulinkSpeed;
+      const dur = simulinkData.duration;
+      if (simulinkT > dur) {
+        if (simulinkLoop) simulinkT = 0;
+        else { simulinkT = dur; stopSimulinkPlayback(); }
+      }
+      applySimulinkAt(simulinkData.time[0] + simulinkT);
+      document.getElementById('simulink-scrub').value = dur > 0 ? simulinkT / dur : 0;
+      document.getElementById('simulink-time').textContent = \`\${simulinkT.toFixed(2)} / \${dur.toFixed(2)} s\`;
+    } catch (err) {
+      console.error('simulink playback failed:', err);
+      stopSimulinkPlayback();
+    }
+  }
+
+  renderer.render(scene, camera);
+}
+
+/* ---------------- BOOT ---------------- */
+/* ---------------- PANEL TABS & SUBCOLLAPSE ---------------- */
+
+document.getElementById('panel-tabs').addEventListener('click', (e) => {
+  const tab = e.target.closest('.panel-tab');
+  if (!tab) return;
+  const name = tab.dataset.tab;
+  document.querySelectorAll('.panel-tab').forEach(t => t.classList.toggle('active', t === tab));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.dataset.tab === name));
+  document.getElementById('panel').querySelector('.panel-scroll').scrollTop = 0;
+});
+
+document.querySelectorAll('.subcollapse-head').forEach(head => {
+  head.addEventListener('click', () => head.closest('.subcollapse').classList.toggle('collapsed'));
+});
+
+resize();
+goToTarget({ x: 0, y: 0, z: -200 });
+animate();
+<\/script>
+</body>
+</html>
+`;export{n as default};

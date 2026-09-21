@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <title>DJIDEL Abdelali Rayan — CV</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+      background: #ffffff;
+      color: #1f2937;
+      padding: 38px 46px;
+      width: 210mm;
+      min-height: 297mm;
+      font-size: 13.5px;
+      line-height: 1.6;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    
+    /* Header Section */
+    .header {
+      border-bottom: 2px solid #f3f4f6;
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .name-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #d97706;
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .name-badge::before {
+      content: "—";
+      color: #d97706;
+      font-weight: 800;
+    }
+    .main-title {
+      font-size: 30px;
+      font-weight: 800;
+      color: #111827;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+    .main-title .dot {
+      color: #d97706;
+    }
+    .specialties {
+      font-size: 13px;
+      font-weight: 600;
+      color: #d97706;
+      margin-bottom: 12px;
+      letter-spacing: 0.02em;
+    }
+    .contact-bar {
+      font-size: 11.5px;
+      color: #6b7280;
+      font-weight: 500;
+      background: #fdfbf7;
+      border: 1px solid #fef3c7;
+      padding: 6px 14px;
+      border-radius: 8px;
+      display: inline-block;
+    }
+
+    /* Section Component */
+    .section {
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #d97706;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1.5px solid #d97706;
+      padding-bottom: 4px;
+      margin-bottom: 12px;
+    }
+
+    /* Summary Card */
+    .summary-text {
+      font-size: 13.5px;
+      color: #4b5563;
+      line-height: 1.75;
+      background: #faf8f5;
+      border-left: 4px solid #d97706;
+      padding: 12px 16px;
+      border-radius: 8px 0 0 8px;
+    }
+
+    /* Experience & Education Items */
+    .item-card {
+      margin-bottom: 14px;
+    }
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 3px;
+    }
+    .item-role {
+      font-size: 14px;
+      font-weight: 700;
+      color: #111827;
+    }
+    .item-company {
+      font-weight: 600;
+      color: #d97706;
+    }
+    .item-period {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #6b7280;
+      background: #f3f4f6;
+      padding: 2px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .item-details {
+      font-size: 12.5px;
+      color: #4b5563;
+      line-height: 1.6;
+    }
+
+    /* Skills Grid */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .skill-box {
+      background: #faf8f5;
+      border: 1px solid #fef3c7;
+      border-radius: 8px;
+      padding: 10px 14px;
+    }
+    .skill-category {
+      font-size: 12px;
+      font-weight: 800;
+      color: #d97706;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+    }
+    .skill-items {
+      font-size: 12px;
+      color: #374151;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="name-badge">DJIDEL Abdelali Rayan</div>
+    <div class="main-title">Control & Systems Engineer<span class="dot">.</span></div>
+    <div class="specialties">Robotics · Industrial Automation · Intelligent Systems · Industry 4.0</div>
+    <div class="contact-bar">Algiers, Algeria | +213 555 662 744 | djidelabdelali@gmail.com | linkedin.com/in/djidel-abdelali-rayan-814b25207</div>
+  </div>
+
+  <!-- Summary Section -->
+  <div class="section">
+    <div class="section-title">PROFESSIONAL SUMMARY</div>
+    <div class="summary-text">Master's graduate in Control and Systems Engineering from USTHB, passionate about robotics, automated systems, and applied AI in industry and emerging technologies. My goal is to contribute to innovative projects in robotics, intelligent systems, automotive, aerospace, and Industry 4.0.</div>
+  </div>
+
+  <!-- Experience Section -->
+  <div class="section">
+    <div class="section-title">PROFESSIONAL EXPERIENCE</div>
+    
+      <div class="item-card">
+        <div class="item-header">
+          <div class="item-role">Teaching Assistant — Electronics & Control Department</div>
+          <div class="item-period">Oct. 2025 – June 2026</div>
+        </div>
+        <div class="item-details">Supervising coursework in sampled-data control systems, PLCs, and ROS2 robotics. Mentoring practical engineering student projects.</div>
+      </div>
+    
+      <div class="item-card">
+        <div class="item-header">
+          <div class="item-role">Head of R&D / Embedded Systems Engineer</div>
+          <div class="item-period">2025 – Present</div>
+        </div>
+        <div class="item-details">Development of SYTRAC (SYTRAC ITS) intelligent traffic regulation and Smart City solution: IoT sensor integration, real-time embedded control, and automated supervision.</div>
+      </div>
+    
+      <div class="item-card">
+        <div class="item-header">
+          <div class="item-role">After-Sales Technical Specialist</div>
+          <div class="item-period">Sept. 2025 – Oct. 2025</div>
+        </div>
+        <div class="item-details">Diagnostics, maintenance, and repair of electronic equipment, testing benches, and embedded control circuit boards.</div>
+      </div>
+    
+  </div>
+
+  <!-- Education Section -->
+  <div class="section">
+    <div class="section-title">EDUCATION & DEGREES</div>
+    
+      <div class="item-card">
+        <div class="item-header">
+          <div class="item-role">Master's Degree in Control & Systems Engineering — <span class="item-company">USTHB — University of Sciences and Technology Houari Boumediene</span></div>
+          <div class="item-period">2023 – 2025</div>
+        </div>
+        <div class="item-details">Master's Thesis: Design, construction, and control of a Delta parallel robot. Kinematic modeling, Simulink simulation, and closed-loop control.</div>
+      </div>
+    
+      <div class="item-card">
+        <div class="item-header">
+          <div class="item-role">Bachelor's Degree in Control Engineering — <span class="item-company">USTHB</span></div>
+          <div class="item-period">2021 – 2023</div>
+        </div>
+        <div class="item-details">Academic Project: Study and design of an automated conveyor system for electrostatic sorting of precious materials.</div>
+      </div>
+    
+  </div>
+
+  <!-- Skills Section -->
+  <div class="section">
+    <div class="section-title">TECHNICAL SKILLS</div>
+    <div class="skills-grid">
+      
+        <div class="skill-box">
+          <div class="skill-category">Robotics</div>
+          <div class="skill-items">ROS2, Delta Parallel Robot, Forward/Inverse Kinematics, 3D Motion Planning</div>
+        </div>
+      
+        <div class="skill-box">
+          <div class="skill-category">Automation</div>
+          <div class="skill-items">Siemens TIA Portal, Industrial PLCs, Ladder Logic, PID Tuning, Grafcet</div>
+        </div>
+      
+        <div class="skill-box">
+          <div class="skill-category">Embedded Systems</div>
+          <div class="skill-items">C/C++, Python, STM32, Arduino, Embedded Linux, IoT, Smart Sensors</div>
+        </div>
+      
+        <div class="skill-box">
+          <div class="skill-category">Simulation & CAD</div>
+          <div class="skill-items">MATLAB/Simulink, SolidWorks 3D, Three.js, Gazebo, Proteus</div>
+        </div>
+      
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,515 @@
+const e=`<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tri automatise par couleur - Convoyeur et bras robotise</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@400;500;600;700&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --bg0:#0a0e14;
+    --bg1:#0f1520;
+    --bg2:#151d2e;
+    --bg3:#1c2640;
+    --border:#1f3050;
+    --accent:#00c8ff;
+    --accent2:#0088aa;
+    --green:#00e676;
+    --amber:#ffab00;
+    --red:#ff3d3d;
+    --blue:#3d7bff;
+    --yellow:#ffe14d;
+    --purple:#b468ff;
+    --text:#c8d8e8;
+    --muted:#4a6080;
+    --mono:'Share Tech Mono',monospace;
+    --sans:'Barlow',sans-serif;
+  }
+  body{background:var(--bg0);color:var(--text);font-family:var(--sans);font-size:14px;overflow-x:hidden;}
+  .app{display:flex;flex-direction:column;min-height:100vh;}
+  .nav{display:flex;align-items:center;gap:0;background:var(--bg1);border-bottom:1px solid var(--border);padding:0 16px;height:52px;flex-wrap:wrap;}
+  .nav-logo{font-family:var(--mono);color:var(--accent);font-size:12px;letter-spacing:2px;margin-right:20px;white-space:nowrap;}
+  .nav-logo small{display:block;font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:2px;}
+  .nav-tabs{display:flex;gap:0;}
+  .nav-tab{padding:0 14px;height:52px;display:flex;align-items:center;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;}
+  .nav-tab:hover{color:var(--text);}
+  .nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+  .nav-right{display:flex;align-items:center;gap:10px;margin-left:auto;padding:8px 0;}
+  .status-pill{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:2px;border:1px solid var(--border);}
+  .status-pill.on{background:rgba(0,230,118,.15);color:var(--green);border-color:var(--green);}
+  .status-pill.warn{background:rgba(255,171,0,.15);color:var(--amber);border-color:var(--amber);}
+  .status-pill.off{background:rgba(255,61,61,.15);color:var(--red);border-color:var(--red);}
+  .btn-estop{background:var(--red);color:#fff;border:none;padding:6px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;border-radius:3px;}
+  .page{flex:1;padding:16px;}
+  .grid-2{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  @media (max-width:980px){.grid-2{grid-template-columns:1fr;} .grid-3{grid-template-columns:1fr;}}
+  .panel{background:var(--bg1);border:1px solid var(--border);border-radius:4px;}
+  .panel-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap;}
+  .panel-title{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;}
+  .panel-body{padding:12px 14px;}
+  .scene-wrap{background:var(--bg0);border-radius:3px;overflow:hidden;}
+  .scene-svg{width:100%;height:auto;display:block;}
+  .btn{font-size:11px;padding:6px 12px;border:1px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;border-radius:2px;font-family:var(--mono);}
+  .btn:hover{border-color:var(--accent2);color:var(--accent);}
+  .btn.primary{background:var(--accent2);color:#fff;border-color:var(--accent2);}
+  .btn.primary:hover{background:var(--accent);color:#000;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+  .io-table{width:100%;border-collapse:collapse;font-size:11px;font-family:var(--mono);}
+  .io-table th{background:var(--bg2);color:var(--accent);font-size:10px;letter-spacing:1px;padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);}
+  .io-table td{padding:5px 8px;border-bottom:1px solid var(--border);color:var(--text);}
+  .led-dot{width:10px;height:10px;border-radius:50%;display:inline-block;background:#1f3050;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);}
+  .led-dot.on{background:var(--green);box-shadow:0 0 8px rgba(0,230,118,.65);}
+  .led-dot.warn{background:var(--amber);box-shadow:0 0 8px rgba(255,171,0,.65);}
+  .led-dot.err{background:var(--red);box-shadow:0 0 8px rgba(255,61,61,.65);}
+  .mode-select{width:100%;background:var(--bg0);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:3px;font-family:var(--mono);font-size:12px;margin-bottom:8px;}
+  .mode-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;}
+  .seq-list{display:flex;flex-direction:column;gap:6px;}
+  .seq-step{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border);border-radius:3px;background:var(--bg2);font-size:12px;}
+  .seq-step.active{border-color:var(--green);background:rgba(0,230,118,.08);color:var(--green);}
+  .seq-num{font-family:var(--mono);font-size:11px;width:20px;height:20px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .seq-step.active .seq-num{border-color:var(--green);color:var(--green);}
+  .bin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;}
+  .bin-card{border:1px solid var(--border);border-radius:4px;padding:10px;text-align:center;background:var(--bg2);}
+  .bin-swatch{width:22px;height:22px;border-radius:4px;margin:0 auto 6px;}
+  .bin-count{font-family:var(--mono);font-size:18px;color:var(--text);}
+  .bin-label{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px;}
+  .log-list{max-height:170px;overflow-y:auto;font-family:var(--mono);font-size:11px;}
+  .log-row{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);}
+  .log-time{color:var(--muted);white-space:nowrap;}
+  .log-msg{color:var(--text);}
+  .section-title{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+  .tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .tag{font-size:10px;font-family:var(--mono);border:1px solid var(--border);color:var(--muted);padding:2px 7px;border-radius:2px;}
+  .slider-row{display:flex;align-items:center;gap:10px;margin-top:10px;}
+  .slider-row input{flex:1;accent-color:var(--accent);}
+  ::-webkit-scrollbar{width:6px;height:6px;}
+  ::-webkit-scrollbar-track{background:var(--bg0);}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+(function(){
+
+  var COLORS = [
+    {key:"rouge", label:"Rouge", hex:"#ff3d3d", binX:0},
+    {key:"vert",  label:"Vert",  hex:"#00e676", binX:1},
+    {key:"bleu",  label:"Bleu",  hex:"#3d7bff", binX:2}
+  ];
+
+  var MODES = [
+    {
+      key:"auto3",
+      label:"Mode 1 - Tri automatique 3 couleurs",
+      desc:"Sequence complete : detection couleur par le capteur TCS, arret du convoyeur en position de prise, le bras se positionne au-dessus du bac correspondant a la couleur detectee (rouge, vert ou bleu) et depose la piece."
+    },
+    {
+      key:"bicolor",
+      label:"Mode 2 - Bicolore (rouge / vert uniquement)",
+      desc:"Programme restreint : seules les pieces rouges et vertes sont triees vers leur bac. Toute autre couleur detectee (bleu compris) est envoyee au bac rebut, le bras ne dessert plus le bac bleu."
+    },
+    {
+      key:"manuel",
+      label:"Mode 3 - Marche manuelle (armoire)",
+      desc:"Le convoyeur et le capteur restent actifs pour l'observation, mais le cycle automatique du bras est desactive dans le programme. Le deplacement et la pince sont commandes manuellement depuis l'armoire."
+    }
+  ];
+
+  var BELT_START = 30;
+  var BELT_END = 300;
+  var SENSOR_X = 150;
+  var PICK_X = 235;
+
+  var state = {
+    tab:"scene",
+    running:true,
+    emergency:false,
+    modeKey:"auto3",
+    speed:1,
+    objects:[],
+    nextSpawnIn:20,
+    seq:0,
+    seqLabel:"attente",
+    armAngle:0,
+    armTargetAngle:0,
+    armGrip:"open",
+    armBusy:false,
+    armHolding:null,
+    detectedColor:null,
+    beltMotor:true,
+    counts:{rouge:0, vert:0, bleu:0, rebut:0},
+    manualArmPos:0,
+    manualGrip:"open",
+    logs:[]
+  };
+
+  function pushLog(msg){
+    var t = new Date().toLocaleTimeString("fr-FR");
+    state.logs.unshift({time:t, msg:msg});
+    state.logs = state.logs.slice(0,40);
+  }
+  pushLog("Automate demarre - " + MODES[0].label);
+
+  function getMode(){
+    for (var i=0;i<MODES.length;i++){ if (MODES[i].key===state.modeKey) return MODES[i]; }
+    return MODES[0];
+  }
+
+  function randomColor(){
+    var idx = Math.floor(Math.random()*3);
+    return COLORS[idx].key;
+  }
+
+  function spawnObject(){
+    state.objects.push({ id: Date.now()+Math.random(), x: BELT_START, color: randomColor(), detected:false, picked:false });
+  }
+
+  function binIndexForColor(colorKey){
+    if (state.modeKey==="bicolor" && colorKey==="bleu") return -1;
+    for (var i=0;i<COLORS.length;i++){ if (COLORS[i].key===colorKey) return i; }
+    return -1;
+  }
+
+  function setSeq(n, label){ state.seq=n; state.seqLabel=label; }
+
+  function tick(){
+    if (!state.running || state.emergency){ render(); return; }
+
+    if (state.nextSpawnIn>0){ state.nextSpawnIn--; }
+    else if (state.objects.length < 4){
+      spawnObject();
+      state.nextSpawnIn = 26 - state.speed*4;
+    }
+
+    var beltRun = state.beltMotor && state.modeKey!=="manuel_stopped";
+
+    if (state.modeKey==="manuel"){
+      if (beltRun){
+        for (var m=0;m<state.objects.length;m++){
+          var mo = state.objects[m];
+          if (!mo.picked){ mo.x += 1.4*state.speed; }
+        }
+        state.objects = state.objects.filter(function(o){ return o.x < BELT_END+20; });
+      }
+      var target = state.manualArmPos;
+      if (Math.abs(state.armAngle-target) > 1){ state.armAngle += (target>state.armAngle?1:-1)*4; }
+      else { state.armAngle = target; }
+      state.armGrip = state.manualGrip;
+      render();
+      return;
+    }
+
+    for (var i=0;i<state.objects.length;i++){
+      var obj = state.objects[i];
+      if (obj.picked) continue;
+      if (!obj.detected && obj.x >= SENSOR_X){
+        obj.detected = true;
+        state.detectedColor = obj.color;
+        var lbl = "?";
+        for (var c=0;c<COLORS.length;c++){ if (COLORS[c].key===obj.color) lbl=COLORS[c].label; }
+        pushLog("Capteur couleur : piece detectee " + lbl.toUpperCase() + " (%IW2)");
+      }
+    }
+
+    var blocking = null;
+    for (var j=0;j<state.objects.length;j++){
+      var o2 = state.objects[j];
+      if (!o2.picked && o2.x >= PICK_X-4 && o2.x <= PICK_X+4){ blocking = o2; break; }
+    }
+
+    if (blocking && !state.armBusy){
+      state.armBusy = true;
+      var bi = binIndexForColor(blocking.color);
+      state.armHolding = blocking;
+      if (bi===-1){
+        setSeq(1,"objet non conforme - ejection rebut");
+        pushLog("Couleur non geree en mode courant -> ejection bac REBUT");
+      } else {
+        setSeq(1,"prise piece (pince fermee)");
+      }
+      state.armTargetAngle = bi===-1 ? 100 : (bi*35);
+    } else if (!blocking) {
+      for (var k=0;k<state.objects.length;k++){ if (!state.objects[k].picked){ state.objects[k].x += 1.2*state.speed; } }
+    }
+
+    if (state.armBusy){
+      var obj2 = state.armHolding;
+      if (state.seq===1){
+        state.armGrip="closed";
+        if (Math.abs(state.armAngle-0) > 2){ state.armAngle += (0>state.armAngle?2:-2); }
+        else { setSeq(2,"rotation vers le bac"); }
+      } else if (state.seq===2){
+        if (Math.abs(state.armAngle-state.armTargetAngle) > 2){ state.armAngle += (state.armTargetAngle>state.armAngle?2:-2); }
+        else { setSeq(3,"depose piece (pince ouverte)"); }
+      } else if (state.seq===3){
+        state.armGrip="open";
+        obj2.picked = true;
+        var bi2 = binIndexForColor(obj2.color);
+        if (bi2===-1){ state.counts.rebut++; }
+        else { state.counts[COLORS[bi2].key]++; }
+        setSeq(4,"retour position attente");
+      } else if (state.seq===4){
+        if (Math.abs(state.armAngle-0) > 2){ state.armAngle += (0>state.armAngle?2:-2); }
+        else {
+          setSeq(0,"attente objet");
+          state.armBusy=false;
+          state.armHolding=null;
+          state.detectedColor=null;
+          state.objects = state.objects.filter(function(o){ return !o.picked; });
+        }
+      }
+    } else {
+      setSeq(0,"attente / convoyage");
+    }
+
+    state.objects = state.objects.filter(function(o){ return o.x < BELT_END+20 || o.picked; });
+
+    render();
+  }
+
+  function emergencyStop(){
+    state.emergency=true;
+    pushLog("ARRET D'URGENCE DECLENCHE");
+    render();
+  }
+  function resumeFromEmergency(){
+    state.emergency=false;
+    pushLog("Reprise apres arret d'urgence");
+    render();
+  }
+  function toggleRun(){
+    state.running=!state.running;
+    pushLog(state.running ? "Automate en RUN" : "Automate en STOP");
+    render();
+  }
+  function setMode(key){
+    state.modeKey=key;
+    state.objects=[];
+    state.armBusy=false;
+    state.armHolding=null;
+    state.armAngle=0;
+    state.armGrip="open";
+    setSeq(0,"attente objet");
+    var m=null;
+    for (var i=0;i<MODES.length;i++){ if (MODES[i].key===key) m=MODES[i]; }
+    pushLog("Nouveau programme charge dans l'automate : " + (m?m.label:key));
+    render();
+  }
+  function setSpeed(v){ state.speed=v; render(); }
+
+  function svgScene(){
+    var w=520, h=260;
+    var beltY = 130, beltH=26;
+    var svg = '<svg viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg" class="scene-svg">';
+    svg += '<rect width="'+w+'" height="'+h+'" fill="#0a0e14"/>';
+
+    svg += '<rect x="'+(BELT_START-10)+'" y="'+beltY+'" width="'+(BELT_END-BELT_START+40)+'" height="'+beltH+'" rx="4" fill="#151d2e" stroke="#1f3050" stroke-width="1.5"/>';
+    for (var s=BELT_START;s<BELT_END+30;s+=18){
+      svg += '<line x1="'+s+'" y1="'+beltY+'" x2="'+(s-8)+'" y2="'+(beltY+beltH)+'" stroke="#1c2640" stroke-width="2"/>';
+    }
+
+    svg += '<rect x="'+(SENSOR_X-10)+'" y="'+(beltY-38)+'" width="20" height="18" rx="2" fill="#151d2e" stroke="'+(state.detectedColor?"#00e676":"#1f3050")+'" stroke-width="1.5"/>';
+    svg += '<line x1="'+SENSOR_X+'" y1="'+(beltY-20)+'" x2="'+SENSOR_X+'" y2="'+beltY+'" stroke="'+(state.detectedColor?"#00e676":"#1f3050")+'" stroke-width="1" stroke-dasharray="2 3"/>';
+    svg += '<text x="'+SENSOR_X+'" y="'+(beltY-44)+'" text-anchor="middle" font-size="8" font-family="Share Tech Mono" fill="#4a6080">CAPTEUR TCS</text>';
+
+    var objSvg="";
+    for (var i=0;i<state.objects.length;i++){
+      var o=state.objects[i];
+      if (o.picked && state.armHolding && state.armHolding.id===o.id) continue;
+      var hex="#8899aa";
+      for (var c=0;c<COLORS.length;c++){ if (COLORS[c].key===o.color) hex=COLORS[c].hex; }
+      var cy = beltY+beltH/2;
+      objSvg += '<rect x="'+(o.x-8)+'" y="'+(cy-8)+'" width="16" height="16" rx="3" fill="'+hex+'" stroke="#0a0e14" stroke-width="1"/>';
+    }
+    svg += objSvg;
+
+    var armBaseX = PICK_X, armBaseY = beltY-8;
+    var rad = state.armAngle * Math.PI/180;
+    var reach = 62;
+    var handX = armBaseX + Math.sin(rad)*reach*0.15;
+    var handY = armBaseY - 46 + (state.seq===1||state.seq===3? -6:0);
+    var gripW = state.armGrip==="closed" ? 4 : 10;
+
+    svg += '<rect x="'+(armBaseX-46)+'" y="'+(armBaseY-56)+'" width="92" height="10" rx="2" fill="#1c2640" stroke="#1f3050"/>';
+    svg += '<circle cx="'+armBaseX+'" cy="'+(armBaseY-51)+'" r="7" fill="#151d2e" stroke="'+(state.armBusy?"#00c8ff":"#1f3050")+'" stroke-width="2"/>';
+    var gx = armBaseX - 70 + (state.armAngle/100)*140;
+    svg += '<line x1="'+armBaseX+'" y1="'+(armBaseY-51)+'" x2="'+gx+'" y2="'+(armBaseY-8)+'" stroke="'+(state.armBusy?"#00c8ff":"#4a6080")+'" stroke-width="4" stroke-linecap="round"/>';
+    svg += '<rect x="'+(gx-gripW/2)+'" y="'+(armBaseY-14)+'" width="'+gripW+'" height="10" fill="#00c8ff" opacity="0.85"/>';
+    if (state.armHolding){
+      var hex2="#8899aa";
+      for (var c2=0;c2<COLORS.length;c2++){ if (COLORS[c2].key===state.armHolding.color) hex2=COLORS[c2].hex; }
+      svg += '<rect x="'+(gx-7)+'" y="'+(armBaseY-4)+'" width="14" height="14" rx="3" fill="'+hex2+'" stroke="#0a0e14"/>';
+    }
+
+    var binY = beltY+beltH+34;
+    var binLabels = COLORS.concat([{key:"rebut", label:"Rebut", hex:"#4a6080"}]);
+    for (var b=0;b<binLabels.length;b++){
+      var bx = armBaseX - 70 + b*46;
+      var active = state.modeKey==="bicolor" && binLabels[b].key==="bleu";
+      svg += '<rect x="'+(bx-16)+'" y="'+binY+'" width="32" height="26" rx="3" fill="'+(active?"#151d2e":"rgba(255,255,255,0.03)")+'" stroke="'+binLabels[b].hex+'" stroke-width="1.5" stroke-dasharray="'+(active?"3 3":"0")+'"/>';
+      svg += '<text x="'+bx+'" y="'+(binY+40)+'" text-anchor="middle" font-size="8" font-family="Share Tech Mono" fill="#4a6080">'+binLabels[b].label.toUpperCase()+'</text>';
+    }
+
+    svg += '</svg>';
+    return svg;
+  }
+
+  function ioRow(addr, label, on){
+    return '<tr><td><span class="led-dot '+(on?"on":"")+'"></span></td><td>'+addr+'</td><td>'+label+'</td><td>'+(on?"1 / TRUE":"0 / FALSE")+'</td></tr>';
+  }
+
+  function render(){
+    var m = getMode();
+
+    var tabsHtml = ["scene","cabinet","sequence"].map(function(t){
+      var lbl = t==="scene"?"Scene 3D":t==="cabinet"?"Armoire de controle":"Programme / Sequence";
+      return '<div class="nav-tab '+(state.tab===t?"active":"")+'" data-tab="'+t+'">'+lbl+'</div>';
+    }).join("");
+
+    var binsHtml = COLORS.map(function(c){
+      return '<div class="bin-card"><div class="bin-swatch" style="background:'+c.hex+'"></div><div class="bin-count">'+state.counts[c.key]+'</div><div class="bin-label">'+c.label+'</div></div>';
+    }).join("") + '<div class="bin-card"><div class="bin-swatch" style="background:#4a6080"></div><div class="bin-count">'+state.counts.rebut+'</div><div class="bin-label">Rebut</div></div>';
+
+    var modeOptions = MODES.map(function(mm){
+      return '<option value="'+mm.key+'" '+(mm.key===state.modeKey?"selected":"")+'>'+mm.label+'</option>';
+    }).join("");
+
+    var stepsDef = [
+      {n:0,label:"Attente objet / convoyage"},
+      {n:1,label:"Prise piece - fermeture pince"},
+      {n:2,label:"Rotation bras vers le bac cible"},
+      {n:3,label:"Depose piece - ouverture pince"},
+      {n:4,label:"Retour position attente"}
+    ];
+    var stepsHtml = stepsDef.map(function(s){
+      return '<div class="seq-step '+(state.seq===s.n?"active":"")+'"><span class="seq-num">'+s.n+'</span><span>'+s.label+'</span></div>';
+    }).join("");
+
+    var ioInputsRows =
+      ioRow("%I0.0","Presence objet convoyeur", state.objects.length>0)
+      + ioRow("%IW2","Capteur couleur (RVB) - valeur", state.detectedColor!==null)
+      + ioRow("%I0.1","Objet en position de prise", state.objects.some(function(o){return !o.picked && Math.abs(o.x-PICK_X)<=4;}))
+      + ioRow("%I0.7","Arret d'urgence", state.emergency);
+
+    var ioOutputsRows =
+      ioRow("%Q0.0","Moteur convoyeur", state.beltMotor && state.running && !state.emergency)
+      + ioRow("%Q0.1","Verin rotation bras", state.armBusy && (state.seq===2 || state.seq===4))
+      + ioRow("%Q0.2","Pince fermee", state.armGrip==="closed")
+      + ioRow("%Q0.3","Pince ouverte", state.armGrip==="open")
+      + ioRow("%Q0.5","Defaut / arret urgence", state.emergency);
+
+    var logsHtml = state.logs.map(function(l){
+      return '<div class="log-row"><span class="log-time">'+l.time+'</span><span class="log-msg">'+l.msg+'</span></div>';
+    }).join("");
+
+    var sceneTab =
+      '<div class="grid-2">'+
+        '<div class="panel">'+
+          '<div class="panel-header"><span class="panel-title">Scene procede - convoyeur et bras de tri</span>'+
+          '<span class="status-pill '+(state.armBusy?"warn":"on")+'">'+(state.armBusy?"CYCLE BRAS EN COURS":"CONVOYAGE")+'</span></div>'+
+          '<div class="panel-body"><div class="scene-wrap">'+svgScene()+'</div>'+
+          '<div class="tag-row"><span class="tag">Etape: '+state.seqLabel+'</span><span class="tag">Programme: '+m.label.split(" - ")[0]+'</span><span class="tag">Vitesse: x'+state.speed+'</span></div>'+
+          '<div class="slider-row"><span style="font-size:11px;color:var(--muted);">Vitesse convoyeur</span><input type="range" id="speed-slider" min="1" max="3" step="1" value="'+state.speed+'"/></div>'+
+          '</div>'+
+        '</div>'+
+        '<div class="panel">'+
+          '<div class="panel-header"><span class="panel-title">Bacs de tri</span></div>'+
+          '<div class="panel-body">'+
+            '<div class="bin-grid">'+binsHtml+'</div>'+
+            '<div class="section-title" style="margin-top:16px;">Journal automate</div>'+
+            '<div class="log-list">'+logsHtml+'</div>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+
+    var cabinetTab =
+      '<div class="grid-2">'+
+        '<div class="panel">'+
+          '<div class="panel-header"><span class="panel-title">Entrees (capteurs)</span></div>'+
+          '<div class="panel-body" style="padding:0;"><table class="io-table"><thead><tr><th></th><th>Adresse</th><th>Libelle</th><th>Etat</th></tr></thead><tbody>'+ioInputsRows+'</tbody></table></div>'+
+        '</div>'+
+        '<div class="panel">'+
+          '<div class="panel-header"><span class="panel-title">Sorties (actionneurs)</span></div>'+
+          '<div class="panel-body" style="padding:0;"><table class="io-table"><thead><tr><th></th><th>Adresse</th><th>Libelle</th><th>Etat</th></tr></thead><tbody>'+ioOutputsRows+'</tbody></table></div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="panel" style="margin-top:12px;">'+
+        '<div class="panel-header"><span class="panel-title">Commande manuelle bras (armoire)</span>'+
+        '<span class="status-pill '+(state.modeKey==="manuel"?"warn":"off")+'">'+(state.modeKey==="manuel"?"MODE MANUEL ACTIF":"HORS SERVICE")+'</span></div>'+
+        '<div class="panel-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">'+
+          '<button class="btn" id="manu-left" '+(state.modeKey!=="manuel"?"disabled":"")+'>BRAS BAC ROUGE</button>'+
+          '<button class="btn" id="manu-mid" '+(state.modeKey!=="manuel"?"disabled":"")+'>BRAS BAC VERT</button>'+
+          '<button class="btn" id="manu-right" '+(state.modeKey!=="manuel"?"disabled":"")+'>BRAS BAC BLEU</button>'+
+          '<button class="btn" id="manu-grip" '+(state.modeKey!=="manuel"?"disabled":"")+'>'+(state.manualGrip==="open"?"FERMER PINCE":"OUVRIR PINCE")+'</button>'+
+        '</div>'+
+      '</div>';
+
+    var seqTab =
+      '<div class="grid-2">'+
+        '<div class="panel">'+
+          '<div class="panel-header"><span class="panel-title">Chargement du programme automate</span></div>'+
+          '<div class="panel-body">'+
+            '<select class="mode-select" id="mode-select">'+modeOptions+'</select>'+
+            '<div class="mode-desc">'+m.desc+'</div>'+
+            '<button class="btn primary" id="load-mode">Telecharger dans l\\u2019automate</button>'+
+          '</div>'+
+        '</div>'+
+        '<div class="panel">'+
+          '<div class="panel-header"><span class="panel-title">Cycle Grafcet - bras de tri</span></div>'+
+          '<div class="panel-body"><div class="seq-list">'+stepsHtml+'</div></div>'+
+        '</div>'+
+      '</div>';
+
+    var app = document.getElementById("app");
+    app.innerHTML =
+      '<div class="nav">'+
+        '<div class="nav-logo">TRI COULEUR<small>CONVOYEUR + BRAS - SIMULATION</small></div>'+
+        '<div class="nav-tabs">'+tabsHtml+'</div>'+
+        '<div class="nav-right">'+
+          '<span class="status-pill '+(state.running&&!state.emergency?"on":"off")+'">'+(state.emergency?"URGENCE":(state.running?"RUN":"STOP"))+'</span>'+
+          '<button class="btn" id="toggle-run">'+(state.running?"PAUSE":"DEMARRER")+'</button>'+
+          (state.emergency ? '<button class="btn" id="resume-emg">REARMER</button>' : '<button class="btn-estop" id="do-emg">ARRET URGENCE</button>')+
+        '</div>'+
+      '</div>'+
+      '<div class="page">'+
+        (state.tab==="scene"?sceneTab:state.tab==="cabinet"?cabinetTab:seqTab)+
+      '</div>';
+
+    var tabEls = app.querySelectorAll("[data-tab]");
+    for (var i=0;i<tabEls.length;i++){
+      tabEls[i].addEventListener("click", function(e){ state.tab=e.currentTarget.getAttribute("data-tab"); render(); });
+    }
+    var runBtn = document.getElementById("toggle-run");
+    if (runBtn) runBtn.addEventListener("click", toggleRun);
+    var emgBtn = document.getElementById("do-emg");
+    if (emgBtn) emgBtn.addEventListener("click", emergencyStop);
+    var resBtn = document.getElementById("resume-emg");
+    if (resBtn) resBtn.addEventListener("click", resumeFromEmergency);
+    var loadBtn = document.getElementById("load-mode");
+    if (loadBtn) loadBtn.addEventListener("click", function(){
+      var sel = document.getElementById("mode-select");
+      setMode(sel.value);
+    });
+    var speedSlider = document.getElementById("speed-slider");
+    if (speedSlider) speedSlider.addEventListener("input", function(e){ setSpeed(parseInt(e.target.value,10)); });
+
+    var mLeft = document.getElementById("manu-left");
+    var mMid = document.getElementById("manu-mid");
+    var mRight = document.getElementById("manu-right");
+    var mGrip = document.getElementById("manu-grip");
+    if (mLeft) mLeft.addEventListener("click", function(){ state.manualArmPos=0; pushLog("Commande manuelle : bras vers bac rouge"); render(); });
+    if (mMid) mMid.addEventListener("click", function(){ state.manualArmPos=35; pushLog("Commande manuelle : bras vers bac vert"); render(); });
+    if (mRight) mRight.addEventListener("click", function(){ state.manualArmPos=70; pushLog("Commande manuelle : bras vers bac bleu"); render(); });
+    if (mGrip) mGrip.addEventListener("click", function(){ state.manualGrip = state.manualGrip==="open"?"closed":"open"; pushLog("Commande manuelle : pince " + state.manualGrip); render(); });
+  }
+
+  render();
+  setInterval(tick, 90);
+})();
+<\/script>
+</body>
+</html>
+`;export{e as default};

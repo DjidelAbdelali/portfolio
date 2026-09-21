@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>جيدل عبد العالي ريان — CV</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Tajawal', 'Segoe UI', sans-serif;
+      background: #ffffff;
+      color: #1f2937;
+      padding: 38px 46px;
+      width: 210mm;
+      min-height: 297mm;
+      font-size: 13.5px;
+      line-height: 1.6;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    
+    /* Header Section */
+    .header {
+      border-bottom: 2px solid #f3f4f6;
+      padding-bottom: 16px;
+      margin-bottom: 20px;
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .name-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #d97706;
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .name-badge::before {
+      content: "—";
+      color: #d97706;
+      font-weight: 800;
+    }
+    .main-title {
+      font-size: 30px;
+      font-weight: 800;
+      color: #111827;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+    .main-title .dot {
+      color: #d97706;
+    }
+    .specialties {
+      font-size: 13px;
+      font-weight: 600;
+      color: #d97706;
+      margin-bottom: 12px;
+      letter-spacing: 0.02em;
+    }
+    .contact-bar {
+      font-size: 11.5px;
+      color: #6b7280;
+      font-weight: 500;
+      background: #fdfbf7;
+      border: 1px solid #fef3c7;
+      padding: 6px 14px;
+      border-radius: 8px;
+      display: inline-block;
+    }
+
+    /* Section Component */
+    .section {
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 800;
+      color: #d97706;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1.5px solid #d97706;
+      padding-bottom: 4px;
+      margin-bottom: 12px;
+    }
+
+    /* Summary Card */
+    .summary-text {
+      font-size: 13.5px;
+      color: #4b5563;
+      line-height: 1.75;
+      background: #faf8f5;
+      border-right: 4px solid #d97706;
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+    }
+
+    /* Experience & Education Items */
+    .item-card {
+      margin-bottom: 14px;
+    }
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 3px;
+    }
+    .item-role {
+      font-size: 14px;
+      font-weight: 700;
+      color: #111827;
+    }
+    .item-company {
+      font-weight: 600;
+      color: #d97706;
+    }
+    .item-period {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #6b7280;
+      background: #f3f4f6;
+      padding: 2px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .item-details {
+      font-size: 12.5px;
+      color: #4b5563;
+      line-height: 1.6;
+    }
+
+    /* Skills Grid */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .skill-box {
+      background: #faf8f5;
+      border: 1px solid #fef3c7;
+      border-radius: 8px;
+      padding: 10px 14px;
+    }
+    .skill-category {
+      font-size: 12px;
+      font-weight: 800;
+      color: #d97706;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+    }
+    .skill-items {
+      font-size: 12px;
+      color: #374151;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="header">
+    <div class="name-badge">جيدل عبد العالي ريان</div>
+    <div class="main-title">مهندس في الآلية والأنظمة<span class="dot">.</span></div>
+    <div class="specialties">الروبوتيات · الآلية الصناعية · الأنظمة الذكية · الصناعة 4.0</div>
+    <div class="contact-bar">الجزائر العاصمة، الجزائر | +213 555 662 744 | djidelabdelali@gmail.com | linkedin.com/in/djidel-abdelali-rayan-814b25207</div>
+  </div>
+
+  <!-- Summary Section -->
+  <div class="section">
+    <div class="section-title">الملف الشخصي</div>
+    <div class="summary-text">حاصل على شهادة في الآلية والأنظمة من جامعة USTHB، شغوف بالروبوتيات والأنظمة الآلية والذكاء الاصطناعي التطبيقي في الصناعة والتقنيات الناشئة. هدفي هو المساهمة في مشاريع مبتكرة في مجالات الروبوتيات والأنظمة الذكية والسيارات والطيران والصناعة 4.0.</div>
+  </div>
+
+  <!-- Experience Section -->
+  <div class="section">
+    <div class="section-title">الخبرة المهنية</div>
+    
+      <div class="item-card">
+        <div class="item-header">
+          <div class="item-role">أستاذ متعاون — قسم الإلكترونيك والآلية</div>
+          <div class="item-period">أكتوبر 2025 – جوان 2026</div>
+        </div>
+        <div class="item-details">تأطير الطلبة في التحكم المعاين، الأجهزة المبرمجة الصناعية (PLC)، والروبوتيات (ROS2). الإشراف على المشاريع التطبيقية والمهام التقنية.</div>
+      </div>
+    
+      <div class="item-card">
+        <div class="item-header">
+          <div class="item-role">مسؤول البحث والتطوير / مهندس الأنظمة المدمجة</div>
+          <div class="item-period">2025 – حاليًا</div>
+        </div>
+        <div class="item-details">تطوير نظام SYTRAC ITS لإدارة حركة المرور الذكية والمدن الذكية: دمج حساسات IoT، التحكم في الزمن الحقيقي، والرقابة التلقائية.</div>
+      </div>
+    
+      <div class="item-card">
+        <div class="item-header">
+          <div class="item-role">تقني صيانة وخدمات ما بعد البيع</div>
+          <div class="item-period">سبتمبر 2025 – أكتوبر 2025</div>
+        </div>
+        <div class="item-details">تشخيص وصيانة المعدات الإلكترونية، بطاقات التحكم المدمجة، وأجهزة الاختبار.</div>
+      </div>
+    
+  </div>
+
+  <!-- Education Section -->
+  <div class="section">
+    <div class="section-title">المسار الدراسي والشهادات</div>
+    
+      <div class="item-card">
+        <div class="item-header">
+          <div class="item-role">ماستر في الآلية والأنظمة — <span class="item-company">جامعة العلوم والتكنولوجيا هواري بومدين — USTHB</span></div>
+          <div class="item-period">2023 – 2025</div>
+        </div>
+        <div class="item-details">مشروع التخرج: تصميم وإنجاز والتحكم في روبوت متوازي من نوع Delta. نمذجة سينماتيكية، محاكاة في Simulink، والتحكم في الحلقة المغلقة.</div>
+      </div>
+    
+      <div class="item-card">
+        <div class="item-header">
+          <div class="item-role">ليسانس في الآلية — <span class="item-company">جامعة العلوم والتكنولوجيا هواري بومدين — USTHB</span></div>
+          <div class="item-period">2021 – 2023</div>
+        </div>
+        <div class="item-details">مشروع أكاديمي: دراسة وتصميم ناقل آلي لفرز المواد الثمينة كهروستاتيكيًا.</div>
+      </div>
+    
+  </div>
+
+  <!-- Skills Section -->
+  <div class="section">
+    <div class="section-title">المهارات التقنية</div>
+    <div class="skills-grid">
+      
+        <div class="skill-box">
+          <div class="skill-category">الروبوتيات</div>
+          <div class="skill-items">ROS2، الروبوت المتوازي Delta، السينماتيك المباشر والعكسي، مسارات 3D</div>
+        </div>
+      
+        <div class="skill-box">
+          <div class="skill-category">الآلية الصناعية</div>
+          <div class="skill-items">Siemens TIA Portal، PLCs، لغة Ladder، تحكم PID، مخطط Grafcet</div>
+        </div>
+      
+        <div class="skill-box">
+          <div class="skill-category">الأنظمة المدمجة</div>
+          <div class="skill-items">C/C++، Python، STM32، Arduino، Linux Embarqué، IoT، الحساسات الذكية</div>
+        </div>
+      
+        <div class="skill-box">
+          <div class="skill-category">المحاكاة والتصميم</div>
+          <div class="skill-items">MATLAB/Simulink، SolidWorks 3D، Three.js، Gazebo، Proteus</div>
+        </div>
+      
+    </div>
+  </div>
+</body>
+</html>

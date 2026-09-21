@@ -1,0 +1,514 @@
+const e=`<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Commande d'ascenseur - Automates Siemens</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@400;500;600;700&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --bg0:#0a0e14;
+    --bg1:#0f1520;
+    --bg2:#151d2e;
+    --bg3:#1c2640;
+    --border:#1f3050;
+    --accent:#00c8ff;
+    --accent2:#0088aa;
+    --green:#00e676;
+    --amber:#ffab00;
+    --red:#ff3d3d;
+    --purple:#b468ff;
+    --text:#c8d8e8;
+    --muted:#4a6080;
+    --mono:'Share Tech Mono',monospace;
+    --sans:'Barlow',sans-serif;
+  }
+  body{background:var(--bg0);color:var(--text);font-family:var(--sans);font-size:14px;overflow-x:hidden;}
+  .app{display:flex;flex-direction:column;min-height:100vh;}
+  .nav{display:flex;align-items:center;gap:0;background:var(--bg1);border-bottom:1px solid var(--border);padding:0 16px;height:52px;flex-wrap:wrap;}
+  .nav-logo{font-family:var(--mono);color:var(--accent);font-size:12px;letter-spacing:2px;margin-right:20px;white-space:nowrap;}
+  .nav-logo small{display:block;font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:2px;}
+  .nav-tabs{display:flex;gap:0;}
+  .nav-tab{padding:0 14px;height:52px;display:flex;align-items:center;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;}
+  .nav-tab:hover{color:var(--text);}
+  .nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+  .nav-right{display:flex;align-items:center;gap:10px;margin-left:auto;padding:8px 0;}
+  .status-pill{font-family:var(--mono);font-size:11px;padding:3px 10px;border-radius:2px;border:1px solid var(--border);}
+  .status-pill.on{background:rgba(0,230,118,.15);color:var(--green);border-color:var(--green);}
+  .status-pill.warn{background:rgba(255,171,0,.15);color:var(--amber);border-color:var(--amber);}
+  .status-pill.off{background:rgba(255,61,61,.15);color:var(--red);border-color:var(--red);}
+  .btn-estop{background:var(--red);color:#fff;border:none;padding:6px 14px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;border-radius:3px;}
+  .page{flex:1;padding:16px;}
+  .grid-2{display:grid;grid-template-columns:1.1fr .9fr;gap:14px;}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+  @media (max-width:980px){.grid-2{grid-template-columns:1fr;} .grid-3{grid-template-columns:1fr;}}
+  .panel{background:var(--bg1);border:1px solid var(--border);border-radius:4px;}
+  .panel-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap;}
+  .panel-title{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;}
+  .panel-body{padding:12px 14px;}
+  .scene-wrap{background:var(--bg0);border-radius:3px;overflow:hidden;}
+  .scene-svg{width:100%;height:auto;display:block;}
+  .btn{font-size:11px;padding:6px 12px;border:1px solid var(--border);background:var(--bg2);color:var(--text);cursor:pointer;border-radius:2px;font-family:var(--mono);}
+  .btn:hover{border-color:var(--accent2);color:var(--accent);}
+  .btn.primary{background:var(--accent2);color:#fff;border-color:var(--accent2);}
+  .btn.primary:hover{background:var(--accent);color:#000;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+  .call-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px;}
+  .call-btn{height:52px;border:1px solid var(--border);background:var(--bg2);color:var(--text);border-radius:4px;cursor:pointer;font-family:var(--mono);font-size:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;}
+  .call-btn small{color:var(--muted);font-size:9px;letter-spacing:1px;}
+  .call-btn.active{border-color:var(--amber);color:var(--amber);background:rgba(255,171,0,.1);}
+  .call-btn.here{border-color:var(--green);color:var(--green);background:rgba(0,230,118,.12);}
+  .io-table{width:100%;border-collapse:collapse;font-size:11px;font-family:var(--mono);}
+  .io-table th{background:var(--bg2);color:var(--accent);font-size:10px;letter-spacing:1px;padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);}
+  .io-table td{padding:5px 8px;border-bottom:1px solid var(--border);color:var(--text);}
+  .led-dot{width:10px;height:10px;border-radius:50%;display:inline-block;background:#1f3050;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);}
+  .led-dot.on{background:var(--green);box-shadow:0 0 8px rgba(0,230,118,.65);}
+  .led-dot.warn{background:var(--amber);box-shadow:0 0 8px rgba(255,171,0,.65);}
+  .led-dot.err{background:var(--red);box-shadow:0 0 8px rgba(255,61,61,.65);}
+  .mode-select{width:100%;background:var(--bg0);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:3px;font-family:var(--mono);font-size:12px;margin-bottom:8px;}
+  .mode-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;}
+  .ladder-svg{width:100%;height:auto;display:block;background:var(--bg0);border-radius:3px;}
+  .log-list{max-height:170px;overflow-y:auto;font-family:var(--mono);font-size:11px;}
+  .log-row{display:flex;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);}
+  .log-time{color:var(--muted);white-space:nowrap;}
+  .log-msg{color:var(--text);}
+  .section-title{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+  .tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+  .tag{font-size:10px;font-family:var(--mono);border:1px solid var(--border);color:var(--muted);padding:2px 7px;border-radius:2px;}
+  ::-webkit-scrollbar{width:6px;height:6px;}
+  ::-webkit-scrollbar-track{background:var(--bg0);}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+(function(){
+
+  var FLOORS = [
+    {id:0,label:"RDC",addrCall:"%I0.0",addrIls:"%I1.0"},
+    {id:1,label:"E1",addrCall:"%I0.1",addrIls:"%I1.1"},
+    {id:2,label:"E2",addrCall:"%I0.2",addrIls:"%I1.2"},
+    {id:3,label:"E3",addrCall:"%I0.3",addrIls:"%I1.3"}
+  ];
+
+  var MODES = [
+    {
+      key:"fifo",
+      label:"Mode 1 - FIFO (ordre d'appel)",
+      desc:"Grafcet simple : les appels sont traites dans leur ordre d'arrivee, un etage a la fois. Pas d'optimisation de trajet -- la cabine peut monter puis redescendre plusieurs fois.",
+      rungs:[
+        {label:"MONTEE",text:["APPEL", "AND", "NOT( ILS=CIBLE )", "AND", "NOT( CIBLE < POSITION )"]},
+        {label:"DESCENTE",text:["APPEL", "AND", "NOT( ILS=CIBLE )", "AND", "CIBLE < POSITION"]},
+        {label:"OUVERTURE PORTE",text:["ILS=CIBLE", "AND", "ARRET_CABINE"]}
+      ]
+    },
+    {
+      key:"collectif",
+      label:"Mode 2 - Collectif descendant (SCAN)",
+      desc:"Algorithme d'ascenseur classique : la cabine poursuit sa course et dessert tous les appels rencontres sur son passage avant de changer de sens. Trajet optimise.",
+      rungs:[
+        {label:"MONTEE",text:["SENS_HAUT", "AND", "( APPEL_AU_DESSUS", "OR", "APPEL_ETAGE_HAUT )"]},
+        {label:"DESCENTE",text:["SENS_BAS", "AND", "( APPEL_EN_DESSOUS", "OR", "APPEL_ETAGE_BAS )"]},
+        {label:"INVERSION SENS",text:["FIN_COURSE", "OR", "AUCUN_APPEL_DEVANT"]},
+        {label:"OUVERTURE PORTE",text:["ILS=ETAGE_COURANT", "AND", "APPEL_ETAGE_COURANT"]}
+      ]
+    },
+    {
+      key:"express",
+      label:"Mode 3 - Express (reactif, dernier appel)",
+      desc:"Ladder reactif minimal : la cabine ignore la file d'attente et repart immediatement vers le dernier bouton presse, meme si un autre etage est plus proche. Marche non optimisee, pensee pour une desserte VIP a la demande.",
+      rungs:[
+        {label:"CIBLE",text:["SET( CIBLE := DERNIER_APPEL )"]},
+        {label:"MONTEE",text:["CIBLE > POSITION", "AND", "NOT PORTE_OUVERTE"]},
+        {label:"DESCENTE",text:["CIBLE < POSITION", "AND", "NOT PORTE_OUVERTE"]}
+      ]
+    },
+    {
+      key:"maintenance",
+      label:"Mode 4 - Marche manuelle (maintenance)",
+      desc:"Code de securite maintenance : les entrees d'appel etage sont forcees a 0 dans le programme (contact NF), seuls les boutons MONTEE/DESCENTE du pupitre de l'armoire pilotent la cabine, a vitesse reduite.",
+      rungs:[
+        {label:"APPELS ETAGE",text:["FORCE = 0", "(inhibes par programme)"]},
+        {label:"MONTEE",text:["BP_MANU_HAUT", "AND", "CLE_MAINTENANCE", "AND", "NOT FDC_HAUT"]},
+        {label:"DESCENTE",text:["BP_MANU_BAS", "AND", "CLE_MAINTENANCE", "AND", "NOT FDC_BAS"]}
+      ]
+    }
+  ];
+
+  var state = {
+    tab:"scene",
+    running:true,
+    emergency:false,
+    modeKey:"fifo",
+    position:0,
+    target:0,
+    moving:false,
+    direction:0,
+    doorState:"closed",
+    doorTimer:0,
+    calls:[0,0,0,0],
+    callSeq:[0,0,0,0],
+    seqCounter:0,
+    lastCall:0,
+    manualDir:0,
+    logs:[]
+  };
+
+  function pushLog(msg){
+    var t = new Date().toLocaleTimeString("fr-FR");
+    state.logs.unshift({time:t,msg:msg});
+    state.logs = state.logs.slice(0,40);
+  }
+  pushLog("Automate demarre - mode: " + MODES[0].label);
+
+  function getMode(){
+    for (var i=0;i<MODES.length;i++){ if (MODES[i].key===state.modeKey) return MODES[i]; }
+    return MODES[0];
+  }
+
+  function callFloor(id){
+    if (state.emergency || !state.running) return;
+    if (state.modeKey === "maintenance"){
+      pushLog("Appel etage " + FLOORS[id].label + " ignore - mode maintenance actif (entree forcee a 0)");
+      return;
+    }
+    if (state.calls[id]) return;
+    state.calls[id]=1;
+    state.seqCounter++;
+    state.callSeq[id]=state.seqCounter;
+    state.lastCall=id;
+    pushLog("Appel enregistre etage " + FLOORS[id].label + " (" + FLOORS[id].addrCall + ")");
+    render();
+  }
+
+  function pickTargetFifo(){
+    var best=-1, bestSeq=Infinity;
+    for (var i=0;i<4;i++){
+      if (state.calls[i] && state.callSeq[i] < bestSeq){ bestSeq=state.callSeq[i]; best=i; }
+    }
+    return best;
+  }
+
+  function pickTargetCollectif(){
+    var pos = state.position;
+    if (state.direction >= 0){
+      for (var i=Math.ceil(pos)+0;i<4;i++){ if (i===pos) continue; if (state.calls[i]) return i; }
+      for (var j=3;j>=0;j--){ if (state.calls[j]) return j; }
+    } else {
+      for (var k=Math.floor(pos);k>=0;k--){ if (k===pos) continue; if (state.calls[k]) return k; }
+      for (var l=0;l<4;l++){ if (state.calls[l]) return l; }
+    }
+    return -1;
+  }
+
+  function pickTargetExpress(){
+    if (state.calls[state.lastCall]) return state.lastCall;
+    for (var i=0;i<4;i++){ if (state.calls[i]) return i; }
+    return -1;
+  }
+
+  function tick(){
+    if (!state.running || state.emergency) { render(); return; }
+
+    if (state.doorState==="opening"){
+      state.doorTimer++;
+      if (state.doorTimer>2){ state.doorState="open"; state.doorTimer=0; }
+    } else if (state.doorState==="open"){
+      state.doorTimer++;
+      if (state.doorTimer>4){ state.doorState="closing"; state.doorTimer=0; }
+    } else if (state.doorState==="closing"){
+      state.doorTimer++;
+      if (state.doorTimer>2){ state.doorState="closed"; state.doorTimer=0; }
+    }
+
+    if (state.modeKey==="maintenance"){
+      if (state.doorState==="closed"){
+        var d = state.manualDir;
+        if (d>0 && state.position<3){ state.position=Math.min(3,state.position+0.12); state.direction=1; state.moving=true; }
+        else if (d<0 && state.position>0){ state.position=Math.max(0,state.position-0.12); state.direction=-1; state.moving=true; }
+        else { state.moving=false; state.direction=0; }
+      }
+      render();
+      return;
+    }
+
+    if (state.doorState!=="closed"){ state.moving=false; render(); return; }
+
+    var currentFloor = Math.round(state.position);
+    var atFloor = Math.abs(state.position-currentFloor) < 0.02;
+
+    if (atFloor && state.calls[currentFloor]){
+      state.position = currentFloor;
+      state.calls[currentFloor]=0;
+      state.doorState="opening";
+      state.moving=false;
+      pushLog("Arrivee etage " + FLOORS[currentFloor].label + " - ouverture porte (" + getMode().label.split(" - ")[0] + ")");
+      render();
+      return;
+    }
+
+    var target;
+    if (state.modeKey==="fifo") target = pickTargetFifo();
+    else if (state.modeKey==="collectif") target = pickTargetCollectif();
+    else target = pickTargetExpress();
+
+    if (target===-1){ state.moving=false; state.direction=0; render(); return; }
+
+    state.target=target;
+    if (target > state.position + 0.01){ state.direction=1; state.position=Math.min(target,state.position+0.1); state.moving=true; }
+    else if (target < state.position - 0.01){ state.direction=-1; state.position=Math.max(target,state.position-0.1); state.moving=true; }
+    else { state.position=target; state.moving=false; }
+
+    render();
+  }
+
+  function emergencyStop(){
+    state.emergency=true;
+    state.moving=false;
+    state.direction=0;
+    pushLog("ARRET D'URGENCE DECLENCHE");
+    render();
+  }
+  function resumeFromEmergency(){
+    state.emergency=false;
+    pushLog("Reprise apres arret d'urgence");
+    render();
+  }
+  function toggleRun(){
+    state.running=!state.running;
+    pushLog(state.running?"Automate en RUN":"Automate en STOP");
+    render();
+  }
+  function setMode(key){
+    state.modeKey=key;
+    state.calls=[0,0,0,0];
+    state.callSeq=[0,0,0,0];
+    var m = null;
+    for (var i=0;i<MODES.length;i++){ if (MODES[i].key===key) m=MODES[i]; }
+    pushLog("Nouveau programme charge dans l'automate: " + (m?m.label:key));
+    render();
+  }
+
+  function svgScene(){
+    var shaftX=60, shaftY=30, shaftW=170, shaftH=280;
+    var floorH = shaftH/4;
+    var cabinH = floorH*0.72;
+    var cabinY = shaftY + shaftH - (state.position+1)*floorH + (floorH-cabinH)/2;
+    var doorOpenPx = state.doorState==="open" ? 24 : (state.doorState==="opening"||state.doorState==="closing" ? 12 : 0);
+
+    var floorsSvg = "";
+    for (var i=3;i>=0;i--){
+      var fy = shaftY + shaftH - (i+1)*floorH;
+      var isCurrent = Math.round(state.position)===i && Math.abs(state.position-i)<0.05;
+      var ilsOn = isCurrent;
+      floorsSvg += '<line x1="'+ (shaftX-14) +'" y1="'+ fy +'" x2="'+ (shaftX+shaftW+30) +'" y2="'+ fy +'" stroke="#1f3050" stroke-width="1" stroke-dasharray="4 4"/>';
+      floorsSvg += '<text x="'+ (shaftX-24) +'" y="'+ (fy+floorH/2+4) +'" text-anchor="end" font-size="11" font-family="Share Tech Mono" fill="'+(isCurrent?"#00e676":"#4a6080")+'">'+FLOORS[i].label+'</text>';
+      floorsSvg += '<circle cx="'+ (shaftX-6) +'" cy="'+ (fy+floorH/2) +'" r="5" fill="'+(ilsOn?"#00e676":"#151d2e")+'" stroke="#1f3050"/>';
+      floorsSvg += '<text x="'+ (shaftX+shaftW+8) +'" y="'+ (fy+floorH/2+4) +'" font-size="8" font-family="Share Tech Mono" fill="#4a6080">ILS'+i+'</text>';
+      var callOn = state.calls[i]===1;
+      floorsSvg += '<rect x="'+ (shaftX+shaftW+40) +'" y="'+ (fy+floorH/2-8) +'" width="16" height="16" rx="2" fill="'+(callOn?"rgba(255,171,0,.2)":"#151d2e")+'" stroke="'+(callOn?"#ffab00":"#1f3050")+'"/>';
+      floorsSvg += '<text x="'+ (shaftX+shaftW+48) +'" y="'+ (fy+floorH/2+4) +'" text-anchor="middle" font-size="9" font-family="Share Tech Mono" fill="'+(callOn?"#ffab00":"#4a6080")+'">BP</text>';
+    }
+
+    var motorColor = state.moving ? "#00c8ff" : "#1f3050";
+    var doorColor = state.doorState==="open" ? "#00e676" : (state.doorState==="closed" ? "#4a6080" : "#ffab00");
+
+    var svg = ''+
+    '<svg viewBox="0 0 340 340" xmlns="http://www.w3.org/2000/svg" class="scene-svg">'+
+      '<rect width="340" height="340" fill="#0a0e14"/>'+
+      '<rect x="'+shaftX+'" y="'+(shaftY-24)+'" width="'+shaftW+'" height="18" fill="#151d2e" stroke="'+motorColor+'" stroke-width="1.5" rx="2"/>'+
+      '<text x="'+(shaftX+shaftW/2)+'" y="'+(shaftY-11)+'" text-anchor="middle" font-size="8" font-family="Share Tech Mono" fill="'+motorColor+'">TREUIL / MOTEUR M1</text>'+
+      '<line x1="'+(shaftX+18)+'" y1="'+shaftY+'" x2="'+(shaftX+18)+'" y2="'+(cabinY)+'" stroke="'+motorColor+'" stroke-width="2" stroke-dasharray="'+(state.moving?"5 3":"0")+'"/>'+
+      '<rect x="'+shaftX+'" y="'+shaftY+'" width="'+shaftW+'" height="'+shaftH+'" fill="none" stroke="#1f3050" stroke-width="1.5"/>'+
+      floorsSvg +
+      '<rect x="'+(shaftX+8)+'" y="'+cabinY+'" width="'+(shaftW-16)+'" height="'+cabinH+'" rx="3" fill="#151d2e" stroke="'+(state.emergency?"#ff3d3d":"#00c8ff")+'" stroke-width="1.5"/>'+
+      '<rect x="'+(shaftX+10)+'" y="'+(cabinY+6)+'" width="'+((shaftW-20)/2-doorOpenPx/2-2)+'" height="'+(cabinH-12)+'" fill="'+doorColor+'" opacity="0.35"/>'+
+      '<rect x="'+(shaftX+shaftW/2+doorOpenPx/2)+'" y="'+(cabinY+6)+'" width="'+((shaftW-20)/2-doorOpenPx/2-2)+'" height="'+(cabinH-12)+'" fill="'+doorColor+'" opacity="0.35"/>'+
+      '<text x="'+(shaftX+shaftW/2)+'" y="'+(cabinY+cabinH/2+4)+'" text-anchor="middle" font-size="10" font-family="Share Tech Mono" fill="'+(state.emergency?"#ff3d3d":"#c8d8e8")+'">CABINE</text>'+
+      '<rect x="'+(shaftX-40)+'" y="'+(shaftY+shaftH-(state.position*floorH)-40)+'" width="18" height="40" fill="#1c2640" stroke="#1f3050"/>'+
+      '<text x="'+(shaftX-31)+'" y="'+(shaftY+shaftH+14)+'" text-anchor="middle" font-size="7" font-family="Share Tech Mono" fill="#4a6080">CONTREPOIDS</text>'+
+      '<text x="'+(shaftX+shaftW/2)+'" y="'+(shaftY+shaftH+22)+'" text-anchor="middle" font-size="9" font-family="Share Tech Mono" fill="#4a6080">FDC BAS %I1.4</text>'+
+      '<text x="'+(shaftX+shaftW/2)+'" y="'+(shaftY-32)+'" text-anchor="middle" font-size="9" font-family="Share Tech Mono" fill="#4a6080">FDC HAUT %I1.5</text>'+
+    '</svg>';
+    return svg;
+  }
+
+  function svgLadder(mode){
+    var rows = mode.rungs;
+    var rowH = 46;
+    var w = 640, h = rows.length*rowH + 30;
+    var svg = '<svg viewBox="0 0 '+w+' '+h+'" xmlns="http://www.w3.org/2000/svg" class="ladder-svg">';
+    svg += '<line x1="30" y1="10" x2="30" y2="'+(h-10)+'" stroke="#1f3050" stroke-width="3"/>';
+    svg += '<line x1="'+(w-30)+'" y1="10" x2="'+(w-30)+'" y2="'+(h-10)+'" stroke="#1f3050" stroke-width="3"/>';
+    for (var i=0;i<rows.length;i++){
+      var y = 30 + i*rowH;
+      var r = rows[i];
+      svg += '<line x1="30" y1="'+y+'" x2="'+(w-30)+'" y2="'+y+'" stroke="#1c2640" stroke-width="1.5"/>';
+      var cx = 70;
+      for (var j=0;j<r.text.length;j++){
+        var tok = r.text[j];
+        var isOp = (tok==="AND"||tok==="OR");
+        if (!isOp){
+          svg += '<rect x="'+(cx-2)+'" y="'+(y-13)+'" width="'+(Math.max(46,tok.length*6.4))+'" height="26" rx="3" fill="#151d2e" stroke="#00c8ff" stroke-width="1"/>';
+          svg += '<text x="'+(cx+Math.max(46,tok.length*6.4)/2-2)+'" y="'+(y+4)+'" text-anchor="middle" font-size="9" font-family="Share Tech Mono" fill="#c8d8e8">'+tok+'</text>';
+          cx += Math.max(46,tok.length*6.4) + 14;
+        } else {
+          svg += '<text x="'+cx+'" y="'+(y+4)+'" font-size="9" font-family="Share Tech Mono" fill="#4a6080">'+tok+'</text>';
+          cx += 34;
+        }
+      }
+      svg += '<circle cx="'+(w-46)+'" cy="'+y+'" r="9" fill="none" stroke="#ffab00" stroke-width="1.5"/>';
+      svg += '<text x="'+(w-46)+'" y="'+(y+3)+'" text-anchor="middle" font-size="7" font-family="Share Tech Mono" fill="#ffab00">M</text>';
+      svg += '<text x="'+(w-140)+'" y="'+(y+4)+'" text-anchor="end" font-size="9" font-family="Share Tech Mono" fill="#00e676">'+r.label+'</text>';
+    }
+    svg += '</svg>';
+    return svg;
+  }
+
+  function ioRow(addr, label, on){
+    return '<tr><td><span class="led-dot '+(on?"on":"")+'"></span></td><td>'+addr+'</td><td>'+label+'</td><td>'+(on?"1 / TRUE":"0 / FALSE")+'</td></tr>';
+  }
+
+  function render(){
+    var m = getMode();
+    var doorLabel = state.doorState==="closed"?"FERMEE":state.doorState==="open"?"OUVERTE":state.doorState==="opening"?"OUVERTURE...":"FERMETURE...";
+
+    var tabsHtml = ["scene","cabinet","ladder"].map(function(t){
+      var lbl = t==="scene"?"Scene 3D":t==="cabinet"?"Armoire de controle":"Programme Ladder";
+      return '<div class="nav-tab '+(state.tab===t?"active":"")+'" data-tab="'+t+'">'+lbl+'</div>';
+    }).join("");
+
+    var callGrid = FLOORS.map(function(f){
+      var atHere = Math.round(state.position)===f.id && Math.abs(state.position-f.id)<0.05 && state.doorState!=="closed";
+      var cls = atHere ? "here" : (state.calls[f.id]?"active":"");
+      return '<button class="call-btn '+cls+'" data-call="'+f.id+'"><span>'+f.label+'</span><small>'+f.addrCall+'</small></button>';
+    }).join("");
+
+    var modeOptions = MODES.map(function(mm){
+      return '<option value="'+mm.key+'" '+(mm.key===state.modeKey?"selected":"")+'>'+mm.label+'</option>';
+    }).join("");
+
+    var ioInputsRows = FLOORS.map(function(f){ return ioRow(f.addrCall,"Appel "+f.label,state.calls[f.id]===1); }).join("")
+      + FLOORS.map(function(f){ var on = Math.round(state.position)===f.id && Math.abs(state.position-f.id)<0.05; return ioRow(f.addrIls,"ILS position "+f.label,on); }).join("")
+      + ioRow("%I1.4","FDC bas", state.position<=0.02)
+      + ioRow("%I1.5","FDC haut", state.position>=2.98)
+      + ioRow("%I0.4","Cle maintenance", state.modeKey==="maintenance")
+      + ioRow("%I0.7","Arret d'urgence", state.emergency);
+
+    var ioOutputsRows = ioRow("%Q0.0","MONTEE M1", state.moving && state.direction>0)
+      + ioRow("%Q0.1","DESCENTE M1", state.moving && state.direction<0)
+      + ioRow("%Q0.2","OUVERTURE PORTE", state.doorState==="opening"||state.doorState==="open")
+      + ioRow("%Q0.3","FERMETURE PORTE", state.doorState==="closing")
+      + ioRow("%Q0.4","VOYANT CABINE OCCUPEE", state.doorState!=="closed")
+      + ioRow("%Q0.5","DEFAUT / ARRET URGENCE", state.emergency);
+
+    var logsHtml = state.logs.map(function(l){
+      return '<div class="log-row"><span class="log-time">'+l.time+'</span><span class="log-msg">'+l.msg+'</span></div>';
+    }).join("");
+
+    var sceneTab =
+      '<div class="grid-2">'+
+        '<div class="panel">'+
+          '<div class="panel-header"><span class="panel-title">Scene procede - cage ascenseur</span>'+
+          '<span class="status-pill '+(state.moving?"warn":"on")+'">'+(state.moving?(state.direction>0?"MONTEE EN COURS":"DESCENTE EN COURS"):"A L&#39;ARRET")+'</span></div>'+
+          '<div class="panel-body"><div class="scene-wrap">'+svgScene()+'</div>'+
+          '<div class="tag-row"><span class="tag">Position: '+state.position.toFixed(2)+'</span><span class="tag">Porte: '+doorLabel+'</span><span class="tag">Programme: '+m.label.split(" - ")[0]+'</span></div>'+
+          '</div>'+
+        '</div>'+
+        '<div class="panel">'+
+          '<div class="panel-header"><span class="panel-title">Boutons d&#39;appel etage</span></div>'+
+          '<div class="panel-body">'+
+            '<div class="section-title">Pupitre palier</div>'+
+            '<div class="call-grid">'+callGrid+'</div>'+
+            '<div class="section-title" style="margin-top:16px;">Journal automate</div>'+
+            '<div class="log-list">'+logsHtml+'</div>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+
+    var cabinetTab =
+      '<div class="grid-2">'+
+        '<div class="panel">'+
+          '<div class="panel-header"><span class="panel-title">Entrees (capteurs / boutons)</span></div>'+
+          '<div class="panel-body" style="padding:0;"><table class="io-table"><thead><tr><th></th><th>Adresse</th><th>Libelle</th><th>Etat</th></tr></thead><tbody>'+ioInputsRows+'</tbody></table></div>'+
+        '</div>'+
+        '<div class="panel">'+
+          '<div class="panel-header"><span class="panel-title">Sorties (actionneurs)</span></div>'+
+          '<div class="panel-body" style="padding:0;"><table class="io-table"><thead><tr><th></th><th>Adresse</th><th>Libelle</th><th>Etat</th></tr></thead><tbody>'+ioOutputsRows+'</tbody></table></div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="panel" style="margin-top:12px;">'+
+        '<div class="panel-header"><span class="panel-title">Marche manuelle (armoire)</span>'+
+        '<span class="status-pill '+(state.modeKey==="maintenance"?"warn":"off")+'">'+(state.modeKey==="maintenance"?"CLE MAINTENANCE":"HORS SERVICE")+'</span></div>'+
+        '<div class="panel-body" style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">'+
+          '<button class="btn" id="manu-up" '+(state.modeKey!=="maintenance"?"disabled":"")+'>MONTEE MANUELLE</button>'+
+          '<button class="btn" id="manu-down" '+(state.modeKey!=="maintenance"?"disabled":"")+'>DESCENTE MANUELLE</button>'+
+          '<button class="btn" id="manu-stop" '+(state.modeKey!=="maintenance"?"disabled":"")+'>STOP</button>'+
+          '<span style="font-size:11px;color:var(--muted);">Actif uniquement lorsque le programme "'+MODES[3].label+'" est charge.</span>'+
+        '</div>'+
+      '</div>';
+
+    var ladderTab =
+      '<div class="panel">'+
+        '<div class="panel-header"><span class="panel-title">Chargement du programme automate</span></div>'+
+        '<div class="panel-body">'+
+          '<select class="mode-select" id="mode-select">'+modeOptions+'</select>'+
+          '<div class="mode-desc">'+m.desc+'</div>'+
+          '<button class="btn primary" id="load-mode">Telecharger dans l&#39;automate</button>'+
+          '<div class="section-title" style="margin-top:18px;">Reseau Ladder actif</div>'+
+          svgLadder(m)+
+        '</div>'+
+      '</div>';
+
+    var app = document.getElementById("app");
+    app.innerHTML =
+      '<div class="nav">'+
+        '<div class="nav-logo">ASCENSEUR PLC<small>SIEMENS TIA - SIMULATION</small></div>'+
+        '<div class="nav-tabs">'+tabsHtml+'</div>'+
+        '<div class="nav-right">'+
+          '<span class="status-pill '+(state.running&&!state.emergency?"on":"off")+'">'+(state.emergency?"URGENCE":(state.running?"RUN":"STOP"))+'</span>'+
+          '<button class="btn" id="toggle-run">'+(state.running?"PAUSE":"DEMARRER")+'</button>'+
+          (state.emergency ? '<button class="btn" id="resume-emg">REARMER</button>' : '<button class="btn-estop" id="do-emg">ARRET URGENCE</button>')+
+        '</div>'+
+      '</div>'+
+      '<div class="page">'+
+        (state.tab==="scene"?sceneTab:state.tab==="cabinet"?cabinetTab:ladderTab)+
+      '</div>';
+
+    var tabEls = app.querySelectorAll("[data-tab]");
+    for (var i=0;i<tabEls.length;i++){
+      tabEls[i].addEventListener("click", function(e){ state.tab=e.currentTarget.getAttribute("data-tab"); render(); });
+    }
+    var callEls = app.querySelectorAll("[data-call]");
+    for (var j=0;j<callEls.length;j++){
+      callEls[j].addEventListener("click", function(e){ callFloor(parseInt(e.currentTarget.getAttribute("data-call"),10)); });
+    }
+    var runBtn = document.getElementById("toggle-run");
+    if (runBtn) runBtn.addEventListener("click", toggleRun);
+    var emgBtn = document.getElementById("do-emg");
+    if (emgBtn) emgBtn.addEventListener("click", emergencyStop);
+    var resBtn = document.getElementById("resume-emg");
+    if (resBtn) resBtn.addEventListener("click", resumeFromEmergency);
+    var loadBtn = document.getElementById("load-mode");
+    if (loadBtn) loadBtn.addEventListener("click", function(){
+      var sel = document.getElementById("mode-select");
+      setMode(sel.value);
+    });
+    var mUp = document.getElementById("manu-up");
+    var mDown = document.getElementById("manu-down");
+    var mStop = document.getElementById("manu-stop");
+    if (mUp) mUp.addEventListener("mousedown", function(){ state.manualDir=1; });
+    if (mDown) mDown.addEventListener("mousedown", function(){ state.manualDir=-1; });
+    if (mStop) mStop.addEventListener("mousedown", function(){ state.manualDir=0; });
+    document.addEventListener("mouseup", function(){ if(state.modeKey==="maintenance") state.manualDir=0; });
+  }
+
+  render();
+  setInterval(tick, 450);
+})();
+<\/script>
+</body>
+</html>
+`;export{e as default};
